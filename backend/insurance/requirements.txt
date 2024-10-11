@@ -1,0 +1,14 @@
+openai
+python-dotenv
+pillow
+requests_html
+requests
+azure-cosmos
+pandas
+azure-search-documents
+azure-identity
+yfinance
+azure-functions
+requests_html
+pydantic
+python-dotenv
