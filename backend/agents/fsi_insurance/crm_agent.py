@@ -4,7 +4,7 @@ import json
 import os
 import logging
 from genai_vanilla_agents.agent import Agent
-from fsi_insurance.config import llm
+from agents.fsi_insurance.config import llm
 from typing import List, Annotated, Optional
 import requests
 

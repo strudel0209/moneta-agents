@@ -23,12 +23,11 @@ CLIENT_ID = ""
 TENANT_ID = ""
 BACKEND_URL = os.getenv('FUNCTION_APP_URL')
 REDIRECT_URI = os.getenv("WEB_REDIRECT_URI")
+DISABLE_LOGIN = os.getenv('DISABLE_LOGIN')
 
 # Pre-defined questions
 PREDEFINED_QUESTIONS = [
-    "Please inform me about Ztravel international",
-    "Provide information about my customer John Doe",
-    "Please let me know the full claim procedure for accidents abroad"
+    "Provide information about my customer John Doe"
 ]
 
 AGENTS = {
@@ -76,37 +75,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-def login():
-    st.markdown('<div class="login-container">', unsafe_allow_html=True)
-    st.markdown('<div class="login-box">', unsafe_allow_html=True)
-    
-    st.markdown('<p class="big-font">Welcome to Moneta</p>', unsafe_allow_html=True)
-    st.markdown('<p class="medium-font">Your Agentic Assistant for Insurance</p>', unsafe_allow_html=True)
-    st.write("Moneta is an AI-powered assistant designed to empower insurance advisors. "
-             "Log in to access personalized insights, streamline your workflow, and enhance your client interactions.")
-    
-    app = initialize_msal_app()
-    scopes = ["User.Read"]
-    auth_url = app.get_authorization_request_url(scopes, redirect_uri=REDIRECT_URI)
-    
-    if st.button("Log in with Microsoft", key="login_button"):
-        st.markdown(f"<meta http-equiv='refresh' content='0;url={auth_url}'>", unsafe_allow_html=True)
-    
-    st.write("By logging in, you agree to our Terms of Service and Privacy Policy.")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    if "code" in st.query_params:
-        with st.spinner("Authenticating..."):
-            code = st.query_params["code"]
-            token_result = acquire_token(app, code)
-            if token_result:
-                user_data = fetch_user_data(token_result["access_token"])
-                st.session_state.authenticated = True
-                st.session_state.user_id = user_data.get("id")
-                st.session_state.display_name = user_data.get("displayName")
-                st.rerun()
+
 # Initialize session state
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
@@ -147,35 +116,43 @@ def fetch_user_data(access_token):
     return response.json()
 
 def login():
-    app = initialize_msal_app()
-    if "code" in st.query_params:
-        with st.spinner("Authenticating..."):
-            code = st.query_params["code"]
-            token_result = acquire_token(app, code)
-            if token_result:
-                user_data = fetch_user_data(token_result["access_token"])
+    if os.getenv("DISABLE_LOGIN") == "True":
+        col1, col2, col3 = st.columns([1,6,1])
+        with col2:
+            st.markdown('<p class="big-font">Welcome to Moneta</p>', unsafe_allow_html=True)
+            st.markdown('<p class="medium-font">Your Agentic Assistant for Insurance and Banking</p>', unsafe_allow_html=True)
+            st.image('moneta_banner.webp')
+            st.write("Moneta is an AI-powered assistant designed to empower insurance advisors. "
+                     "Log in to access personalized insights, streamline your workflow, and enhance your client interactions.")
+            if st.button("Log in with Microsoft", key="login_button"):
                 st.session_state.authenticated = True
-                st.session_state.user_id = user_data.get("id")
-                st.session_state.display_name = user_data.get("displayName")
+                st.session_state.user_id = "default_user_id"
+                st.session_state.display_name = "Default User"
                 st.rerun()
-    
-    
-    col1, col2, col3 = st.columns([1,6,1])
-    with col2:
-        
-        st.markdown('<p class="big-font">Welcome to Moneta</p>', unsafe_allow_html=True)
-        st.markdown('<p class="medium-font">Your Agentic Assistant for Insurance and Banking</p>', unsafe_allow_html=True)
-        st.image('moneta_banner.webp')
+    else:
+        app = initialize_msal_app()
+        if "code" in st.query_params:
+            with st.spinner("Authenticating..."):
+                code = st.query_params["code"]
+                token_result = acquire_token(app, code)
+                if token_result:
+                    user_data = fetch_user_data(token_result["access_token"])
+                    st.session_state.authenticated = True
+                    st.session_state.user_id = user_data.get("id")
+                    st.session_state.display_name = user_data.get("displayName")
+                    st.rerun()
+        col1, col2, col3 = st.columns([1,6,1])
+        with col2:
+            st.markdown('<p class="big-font">Welcome to Moneta</p>', unsafe_allow_html=True)
+            st.markdown('<p class="medium-font">Your Agentic Assistant for Insurance and Banking</p>', unsafe_allow_html=True)
+            st.image('moneta_banner.webp')
+            st.write("Moneta is an AI-powered assistant designed to empower insurance advisors. "
+                     "Log in to access personalized insights, streamline your workflow, and enhance your client interactions.")
+            scopes = ["User.Read"]
+            auth_url = app.get_authorization_request_url(scopes, redirect_uri=REDIRECT_URI)
+            if st.button("Log in with Microsoft", key="login_button"):
+                st.markdown(f"<meta http-equiv='refresh' content='0;url={auth_url}'>", unsafe_allow_html=True)
 
-        st.write("Moneta is an AI-powered assistant designed to empower insurance advisors. "
-                 "Log in to access personalized insights, streamline your workflow, and enhance your client interactions.")
-        
-        
-        scopes = ["User.Read"]
-        auth_url = app.get_authorization_request_url(scopes, redirect_uri=REDIRECT_URI)
-        
-        if st.button("Log in with Microsoft", key="login_button"):
-            st.markdown(f"<meta http-equiv='refresh' content='0;url={auth_url}'>", unsafe_allow_html=True)
         
     
 
@@ -188,10 +165,11 @@ def logout():
 def fetch_conversations():
     payload = {
         "user_id": st.session_state.user_id,
-        "load_history": True
+        "load_history": True,
+        "use_case" : 'fsi_banking'
     }
     try:
-        response = requests.post(f'https://{BACKEND_URL}/api/http_trigger', json=payload)
+        response = requests.post(f'{BACKEND_URL}/api/http_trigger', json=payload)
         return response.json()
     except requests.exceptions.RequestException as e:
         st.error(f"Error fetching conversations: {e}")
@@ -363,13 +341,14 @@ def display_chat():
 def send_message_to_backend(user_input, conversation_dict):
     payload = {
         "user_id": st.session_state.user_id,
-        "message": user_input
+        "message": user_input,
+        "use_case" : 'fsi_banking'
     }
     if conversation_dict.get('name') != 'New Conversation':
         payload["chat_id"] = conversation_dict.get('name')
     
     try:
-        response = requests.post(f'https://{BACKEND_URL}/api/http_trigger', json=payload)
+        response = requests.post(f'{BACKEND_URL}/api/http_trigger', json=payload)
         assistant_response = response.json()
         st.session_state.conversations[st.session_state.current_conversation_index]['name'] = assistant_response['chat_id']
         reply = assistant_response.get('reply', [])

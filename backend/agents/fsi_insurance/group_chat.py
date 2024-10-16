@@ -1,12 +1,12 @@
 from typing import Dict, List, Tuple
 from genai_vanilla_agents.team import Team
-from fsi_insurance.user_proxy_agent import user_proxy_agent
-from fsi_insurance.crm_agent import crm_agent
-from fsi_insurance.product_agent import product_agent
-from fsi_insurance.planner_agent import planner_agent
-from fsi_insurance.config import llm
+from agents.fsi_insurance.user_proxy_agent import user_proxy_agent
+from agents.fsi_insurance.crm_agent import crm_agent
+from agents.fsi_insurance.product_agent import product_agent
+from agents.fsi_insurance.planner_agent import planner_agent
+from agents.fsi_insurance.config import llm
 
-def create_group_chat():
+def create_group_chat_insurance():
     system_message_manager="""
     You are the overall manager of the group chat. 
     You can see all the messages and intervene if necessary. 

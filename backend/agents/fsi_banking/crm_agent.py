@@ -4,7 +4,7 @@ import json
 import os
 import logging
 from genai_vanilla_agents.agent import Agent
-from fsi_banking.config import llm
+from agents.fsi_banking.config import llm
 from typing import List, Annotated, Optional
 import requests
 
@@ -41,7 +41,7 @@ def load_from_crm(full_name:Annotated[str,"The customer full name to search for"
     """
     try:
         # Open and read the JSON file
-        with open('./data/customer_dynamics.json', 'r') as file:
+        with open('data/customer123456.json', 'r') as file:
             return json.load(file)
     except Exception as e:
         print(f"An unexpected error occurred: {e}") 

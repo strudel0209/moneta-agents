@@ -15,7 +15,8 @@ load_dotenv()
 from conversation_store import ConversationStore
 from genai_vanilla_agents.workflow import Workflow
 from genai_vanilla_agents.conversation import Conversation
-from agents.group_chat import create_group_chat
+from agents.fsi_insurance.group_chat import create_group_chat_insurance
+from agents.fsi_banking.group_chat import create_group_chat_banking
 
 
 
@@ -44,6 +45,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     chat_id = req_body.get('chat_id')  # None if starting a new chat
     user_message = req_body.get('message')
     load_history = req_body.get('load_history')
+    usecase_type = req_body.get('use_case')
 
     if not user_id:
         return func.HttpResponse(
@@ -51,16 +53,34 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             status_code=400,
             mimetype="application/json"
         )
+    
+    if not usecase_type:
+        return func.HttpResponse(
+            json.dumps({"error": "<usecase_type> is required!"}),
+            status_code=400,
+            mimetype="application/json"
+        )
 
     # A helper class that store and retrieve messages by conversation from an Azure Cosmos DB
     key = DefaultAzureCredential()
 
-    #TODO switch based on API param: insurance or banking
+    #select use case container 
+    if 'fsi_insurance' == usecase_type:
+        container_name=os.getenv("COSMOSDB_CONTAINER_FSI_INS_USER_NAME")
+    elif 'fsi_banking' == usecase_type:
+        container_name=os.getenv("COSMOSDB_CONTAINER_FSI_BANK_USER_NAME")
+    else:
+        return func.HttpResponse(
+            json.dumps({"error": "Use case not recognized/not implemented..."}),
+            status_code=400,
+            mimetype="application/json"
+        )
+    
     db = ConversationStore(
         url=os.getenv("COSMOSDB_ENDPOINT"),
         key=key,
         database_name=os.getenv("COSMOSDB_DATABASE_NAME"),
-        container_name=os.getenv("COSMOSDB_CONTAINER_FSI_BANK_USER_NAME")
+        container_name=container_name
     )
 
     if not db.read_user_info(user_id):
@@ -113,7 +133,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     
     # See https://microsoft.github.io/autogen/docs/topics/groupchat/resuming_groupchat
-    team = create_group_chat()
+    #select use case group chat
+    if 'fsi_insurance' == usecase_type:
+        team = create_group_chat_insurance()
+    elif 'fsi_banking' == usecase_type:
+         team = create_group_chat_banking()
     
     history_count = len(conversation_history.messages)
      

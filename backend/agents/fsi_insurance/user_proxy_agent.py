@@ -1,5 +1,5 @@
 from genai_vanilla_agents.user import User
-from fsi_insurance.config import llm
+from agents.fsi_insurance.config import llm
 
 user_proxy_agent = User(
     id="Customer",

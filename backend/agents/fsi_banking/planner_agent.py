@@ -1,6 +1,6 @@
 
 from genai_vanilla_agents.agent import Agent
-from fsi_banking.config import llm
+from agents.fsi_banking.config import llm
 
 # Assistant Agent - Planner  
 planner_agent = Agent(  
