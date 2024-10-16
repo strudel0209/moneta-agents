@@ -4,7 +4,7 @@ import json
 import os
 import logging
 from genai_vanilla_agents.agent import Agent
-from agents.config import llm
+from fsi_banking.config import llm
 from typing import List, Annotated, Optional
 import requests
 import pandas as pd

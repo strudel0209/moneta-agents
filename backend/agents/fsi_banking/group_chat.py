@@ -1,10 +1,10 @@
 from typing import Dict, List, Tuple
 from genai_vanilla_agents.team import Team
-from agents.user_proxy_agent import user_proxy_agent
-from agents.crm_agent import crm_agent
-from agents.product_agent import product_agent
-from agents.planner_agent import planner_agent
-from agents.config import llm
+from fsi_banking.user_proxy_agent import user_proxy_agent
+from fsi_banking.crm_agent import crm_agent
+from fsi_banking.product_agent import product_agent
+from fsi_banking.planner_agent import planner_agent
+from fsi_banking.config import llm
 
 def create_group_chat():
     system_message_manager="""

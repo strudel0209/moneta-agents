@@ -54,11 +54,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     # A helper class that store and retrieve messages by conversation from an Azure Cosmos DB
     key = DefaultAzureCredential()
+
+    #TODO switch based on API param: insurance or banking
     db = ConversationStore(
         url=os.getenv("COSMOSDB_ENDPOINT"),
         key=key,
         database_name=os.getenv("COSMOSDB_DATABASE_NAME"),
-        container_name=os.getenv("COSMOSDB_CONTAINER_USER_NAME")
+        container_name=os.getenv("COSMOSDB_CONTAINER_FSI_BANK_USER_NAME")
     )
 
     if not db.read_user_info(user_id):

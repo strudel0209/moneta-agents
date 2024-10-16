@@ -27,15 +27,8 @@ param functionAppName string = toLower('func${uniqueString(resourceGroup().id)}'
 @description('Application Insights Location')
 param appInsightsLocation string = location
 
-@allowed([
-  'insurance'
-  'banking'
-])
-@description('Type of backend use case deployment: "insurance" or "banking"')
-param deploymentType string
-
-var functionAppDockerImage = deploymentType == 'insurance' ? 'DOCKER|moneta.azurecr.io/moneta-ins-ai-backend:v1.0.23' : 'DOCKER|moneta.azurecr.io/moneta-bank-ai-backend:v1.0.1'
-var webappAppDockerImage = deploymentType == 'insurance' ? 'DOCKER|moneta.azurecr.io/moneta-ins-ai-frontend:v1.0.8' : 'DOCKER|moneta.azurecr.io/moneta-bank-ai-frontend:v1.0.1'
+var functionAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-backend:v1.0.1' 
+var webappAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-frontend:v1.0.1'
 
 // New parameters for Azure OpenAI
 @description('Azure OpenAI Endpoint')

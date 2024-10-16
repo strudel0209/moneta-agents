@@ -135,10 +135,12 @@ __azurite_db*__.json
 .python_packages
 
 OAI_CONFIG_LIST
-.vscode/
+
 .venv/
 auotegen_logs/
 
 travel_question_bank_answered_best.csv
 travel_question_bank_answered_best_small.csv
 .azure
+
+.vscode/
