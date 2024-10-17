@@ -27,14 +27,14 @@ product_agent = Agent(
     description="""Call this Agent if:
         - You need to retrieve generic policies details, terms and conditions or other offering related information of Zurich Insurance.
         DO NOT CALL THIS AGENT IF:  
-        - You need to search for specific client's data identified by a client name in the request""",
+        - You need to search for specific client's data identified by a client name or id in the request""",
     )  
 
 
 
 def search(query: str):
     service_endpoint = os.getenv('AI_SEARCH_ENDPOINT')
-    index_name = os.getenv('AI_SEARCH_INDEX_NAME')
+    index_name = os.getenv('AI_SEARCH_INS_INDEX_NAME')
     key = os.environ["AI_SEARCH_KEY"]
 
     search_client = SearchClient(service_endpoint, index_name, AzureKeyCredential(key))
@@ -49,7 +49,7 @@ def search(query: str):
                 }
             ],
             "queryType": "semantic",
-            "semanticConfiguration": os.getenv('AI_SEARCH_SEMANTIC_CONFIGURATION'),
+            "semanticConfiguration": os.getenv('AI_SEARCH_INS_SEMANTIC_CONFIGURATION'),
             "captions": "extractive",
             "answers": "extractive|count-3",
             "queryLanguage": "en-US"

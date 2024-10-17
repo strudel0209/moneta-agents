@@ -36,6 +36,13 @@ class Conversation():
             "variables": self.variables,
             "metrics": self.metrics.model_dump()
         }
+    
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            messages=data.get('messages', []),
+            variables=data.get('variables', {})
+        )
         
 class ConversationReadingStrategy(ABC):
     @abstractmethod

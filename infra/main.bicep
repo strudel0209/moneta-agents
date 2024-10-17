@@ -13,10 +13,16 @@ param namePrefix string = 'moneta'
 param cosmosDbAccountName string = toLower('cdb${uniqueString(resourceGroup().id)}')
 
 @description('Name of the Cosmos DB database')
-param cosmosDbDatabaseName string = 'ConversationDB'
+param cosmosDbDatabaseName string = 'rminsights'
 
 @description('Name of the Cosmos DB container')
-param cosmosDbContainerName string = 'Conversations'
+param cosmosDbInsuranceContainerName string = 'user_fsi_ins_data'
+
+@description('Name of the Cosmos DB container')
+param cosmosDbBankingContainerName string = 'user_fsi_bank_data'
+
+@description('Name of the Cosmos DB container')
+param cosmosDbClientContainerName string = 'clientdata'
 
 // Define the storage account name
 param storageAccountName string = 'sa${uniqueString(resourceGroup().id)}'
@@ -52,11 +58,23 @@ param AI_SEARCH_ENDPOINT string
 @secure()
 param AI_SEARCH_KEY string
 
-@description('AI Search Index Name')
-param AI_SEARCH_INDEX_NAME string
+@description('AI_SEARCH_CIO_INDEX_NAME')
+param AI_SEARCH_CIO_INDEX_NAME string
 
-@description('AI Search Semantic Configuration')
-param AI_SEARCH_SEMANTIC_CONFIGURATION string
+@description('AI_SEARCH_CIO_SEMANTIC_CONFIGURATION')
+param AI_SEARCH_CIO_SEMANTIC_CONFIGURATION string
+
+@description('AI_SEARCH_FUNDS_INDEX_NAME')
+param AI_SEARCH_FUNDS_INDEX_NAME string
+
+@description('AI_SEARCH_FUNDS_SEMANTIC_CONFIGURATION')
+param AI_SEARCH_FUNDS_SEMANTIC_CONFIGURATION string
+
+@description('AI_SEARCH_INS_INDEX_NAME')
+param AI_SEARCH_INS_INDEX_NAME string
+
+@description('AI_SEARCH_INS_SEMANTIC_CONFIGURATION')
+param AI_SEARCH_INS_SEMANTIC_CONFIGURATION string
 
 
 // Define common tags  
@@ -128,15 +146,42 @@ resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@20
   tags: commonTags
 }
 
-// Create the Cosmos DB Container
-resource cosmosDbContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-05-15' = {
+// Create the Cosmos DB Container for insurance conversations
+resource cosmosDbInsuranceContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-05-15' = {
   parent: cosmosDbDatabase
-  name: cosmosDbContainerName
+  name: cosmosDbInsuranceContainerName
   properties: {
     resource: {
-      id: cosmosDbContainerName
+      id: cosmosDbInsuranceContainerName
       partitionKey: {
-        paths: ['/userId']
+        paths: ['/user_id']
+        kind: 'Hash'
+      }
+      indexingPolicy: {
+        indexingMode: 'consistent'
+        automatic: true
+        includedPaths: [
+          {
+            path: '/*'
+          }
+        ]
+        excludedPaths: []
+      }
+    }
+    options: {}
+  }
+  tags: commonTags
+}
+
+// Create the Cosmos DB Container for Banking conversations
+resource cosmosDbBankingContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-05-15' = {
+  parent: cosmosDbDatabase
+  name: cosmosDbBankingContainerName
+  properties: {
+    resource: {
+      id: cosmosDbBankingContainerName
+      partitionKey: {
+        paths: ['/user_id']
         kind: 'Hash'
       }
       indexingPolicy: {
@@ -263,8 +308,12 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
           value: cosmosDbDatabaseName
         }
         {
-          name: 'COSMOSDB_CONTAINER_USER_NAME'
-          value: cosmosDbContainerName
+          name: 'COSMOSDB_CONTAINER_FSI_BANK_USER_NAME'
+          value: cosmosDbBankingContainerName
+        }
+        {
+          name: 'COSMOSDB_CONTAINER_FSI_INS_USER_NAME'
+          value: cosmosDbInsuranceContainerName
         }
         {
           name: 'AZURE_OPENAI_ENDPOINT'
@@ -291,12 +340,28 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
           value: AI_SEARCH_KEY
         }
         {
-          name: 'AI_SEARCH_INDEX_NAME'
-          value: AI_SEARCH_INDEX_NAME
+          name: 'AI_SEARCH_CIO_INDEX_NAME'
+          value: AI_SEARCH_CIO_INDEX_NAME
         }
         {
-          name: 'AI_SEARCH_SEMANTIC_CONFIGURATION'
-          value: AI_SEARCH_SEMANTIC_CONFIGURATION
+          name: 'AI_SEARCH_CIO_SEMANTIC_CONFIGURATION'
+          value: AI_SEARCH_CIO_SEMANTIC_CONFIGURATION
+        }
+        {
+          name: 'AI_SEARCH_FUNDS_INDEX_NAME'
+          value: AI_SEARCH_FUNDS_INDEX_NAME
+        }
+        {
+          name: 'AI_SEARCH_FUNDS_SEMANTIC_CONFIGURATION'
+          value: AI_SEARCH_FUNDS_SEMANTIC_CONFIGURATION
+        }
+        {
+          name: 'AI_SEARCH_INS_INDEX_NAME'
+          value: AI_SEARCH_INS_INDEX_NAME
+        }
+        {
+          name: 'AI_SEARCH_INS_SEMANTIC_CONFIGURATION'
+          value: AI_SEARCH_INS_SEMANTIC_CONFIGURATION
         }
       ]
     }
@@ -383,10 +448,10 @@ resource cosmosDBRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAs
 
 
 @description('Name of the App Service Plan for Streamlit')
-param appServicePlanName string = '${namePrefix}-streamlit-plan'
+param appServicePlanName string = '${namePrefix}-plan'
 
 @description('Name of the Web App for Streamlit')
-param webAppName string = '${namePrefix}-streamlit-app'
+param webAppName string = '${namePrefix}-app'
 
 // Create an App Service Plan
 resource streamlitServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
@@ -418,7 +483,7 @@ resource streamlitWebApp 'Microsoft.Web/sites@2022-03-01' = {
         }
         {
           name: 'FUNCTION_APP_URL'
-          value: functionApp.properties.defaultHostName
+          value: 'https://${functionApp.properties.defaultHostName}'
         }
         {
           name: 'DOCKER_REGISTRY_SERVER_URL'

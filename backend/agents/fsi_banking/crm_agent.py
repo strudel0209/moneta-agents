@@ -41,7 +41,7 @@ def load_from_crm(full_name:Annotated[str,"The customer full name to search for"
     """
     try:
         # Open and read the JSON file
-        with open('data/customer123456.json', 'r') as file:
+        with open('/home/aga/azureai/aoai-fsi-empowering-advisory-agentic/backend/agents/fsi_banking/data/customer123456.json', 'r') as file:
             return json.load(file)
     except Exception as e:
         print(f"An unexpected error occurred: {e}") 

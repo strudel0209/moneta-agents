@@ -115,6 +115,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if chat_id:
         # Continue existing chat
         conversation_data = user_data.get('chat_histories', {}).get(chat_id)
+        logging.info(f"Conversation data={conversation_data}")
         if conversation_data:
             conversation_history = Conversation.from_dict(conversation_data)
         else:

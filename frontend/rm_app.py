@@ -30,10 +30,18 @@ PREDEFINED_QUESTIONS = [
     "Provide information about my customer John Doe"
 ]
 
-AGENTS = {
+INS_AGENTS = {
     'Planner': {'emoji': '📅', 'color': '#28a745'},
     'CRM': {'emoji': '👥', 'color': '#17a2b8'},
     'Product': {'emoji': '🔍', 'color': '#ffc107'}
+}
+
+BANK_AGENTS = {
+    'Planner': {'emoji': '📅', 'color': '#28a745'},    # Green for planning
+    'CRM': {'emoji': '👥', 'color': '#17a2b8'},        # Blue for customer relations
+    'Funds': {'emoji': '💰', 'color': '#ffc107'},      # Gold for money and funds
+    'CIO': {'emoji': '📈', 'color': '#007bff'},        # Blue for investment growth
+    'News': {'emoji': '📰', 'color': '#6c757d'},       # Gray for news and updates
 }
 
 # Updated Custom CSS
@@ -91,7 +99,11 @@ if "user_input" not in st.session_state:
     st.session_state.user_input = ""
 if "last_selected_question" not in st.session_state:
     st.session_state.last_selected_question = None
-    
+if "use_case" not in st.session_state:
+    st.session_state.use_case = 'fsi_insurance'  # Default use case
+if "AGENTS" not in st.session_state:
+    st.session_state.AGENTS = INS_AGENTS  # Default agents
+
 def initialize_msal_app():
     authority_url = f"https://login.microsoftonline.com/{TENANT_ID}"
     return PublicClientApplication(CLIENT_ID, authority=authority_url)
@@ -152,11 +164,7 @@ def login():
             auth_url = app.get_authorization_request_url(scopes, redirect_uri=REDIRECT_URI)
             if st.button("Log in with Microsoft", key="login_button"):
                 st.markdown(f"<meta http-equiv='refresh' content='0;url={auth_url}'>", unsafe_allow_html=True)
-
-        
     
-
-
 def logout():
     for key in list(st.session_state.keys()):
         del st.session_state[key]
@@ -166,7 +174,7 @@ def fetch_conversations():
     payload = {
         "user_id": st.session_state.user_id,
         "load_history": True,
-        "use_case" : 'fsi_banking'
+        "use_case" : st.session_state.use_case  # Use selected use case
     }
     try:
         response = requests.post(f'{BACKEND_URL}/api/http_trigger', json=payload)
@@ -191,39 +199,62 @@ def select_conversation(index):
 
 def display_sidebar():
     with st.sidebar:
+        # First item: dropdown to select use case
+        use_case_options = ['fsi_insurance', 'fsi_banking']
+        selected_use_case = st.selectbox('Select Use Case', use_case_options, index=use_case_options.index(st.session_state.use_case), key='use_case_selectbox')
+        if selected_use_case != st.session_state.use_case:
+            st.session_state.use_case = selected_use_case
+            # Initialize AGENTS based on use_case
+            if st.session_state.use_case == 'fsi_insurance':
+                st.session_state.AGENTS = INS_AGENTS
+            else:
+                st.session_state.AGENTS = BANK_AGENTS
+            # Clear conversations when use case changes
+            st.session_state.conversations = fetch_conversations()
+            st.session_state.current_conversation_index = None
+
+        # Initialize AGENTS based on use_case
+        if st.session_state.use_case == 'fsi_insurance':
+            st.session_state.AGENTS = INS_AGENTS
+        else:
+            st.session_state.AGENTS = BANK_AGENTS
+
         st.title("Moneta Assistant")
         st.write("Empowering Advisors with AI")
         
         ## Show online agents       
         st.markdown("<h4 style='text-align: left;'>Agents Online:</h4>", unsafe_allow_html=True)
         
-        col1, col2, col3 = st.columns(3)
+        agents = list(st.session_state.AGENTS.items())
+        agents_per_row = 3  # Maximum number of agents per line
 
-        for i, (agent, details) in enumerate(AGENTS.items()):
-            with [col1, col2, col3][i]:
-                st.markdown(
-                    f"""
-                    <div class="agent-indicator">
-                        <div class="agent-circle" style="background-color: {details['color']};">
-                            {details['emoji']}
+        # Split the agents into batches of agents_per_row
+        for i in range(0, len(agents), agents_per_row):
+            batch = agents[i:i+agents_per_row]
+            cols = st.columns(len(batch))
+            for col, (agent, details) in zip(cols, batch):
+                with col:
+                    st.markdown(
+                        f"""
+                        <div class="agent-indicator">
+                            <div class="agent-circle" style="background-color: {details['color']};">
+                                {details['emoji']}
+                            </div>
+                            <div class="agent-name">
+                                {agent}<span class="checkmark">✓</span>
+                            </div>
                         </div>
-                        <div class="agent-name">
-                            {agent}<span class="checkmark">✓</span>
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                        """,
+                        unsafe_allow_html=True
+                    )
 
         st.write("---")
         st.write(f"Welcome, {st.session_state.display_name}!")
-        
-        
-        
+
         if st.button("Start New Conversation", key="new_conv_button"):
             start_new_conversation()
         st.write("---")
-        
+
         for idx, conv_dict in enumerate(st.session_state.conversations):
             messages = conv_dict.get('messages', [])
             
@@ -247,6 +278,7 @@ def display_sidebar():
         st.write("---")
         if st.button("Logout"):
             logout()
+
 
 def display_online_agents():
     st.markdown(
@@ -282,8 +314,6 @@ def display_online_agents():
         unsafe_allow_html=True
     )
 
-
-
 def display_chat():
     display_online_agents()
     
@@ -298,7 +328,6 @@ def display_chat():
     conversation_dict = st.session_state.conversations[st.session_state.current_conversation_index]
     messages = conversation_dict.get('messages', [])
 
-
     if selected_question != "Select a predefined question or type your own below":
         if 'last_selected_question' not in st.session_state or st.session_state.last_selected_question != selected_question:
             st.session_state.last_selected_question = selected_question
@@ -307,6 +336,7 @@ def display_chat():
                 assistant_response = send_message_to_backend(selected_question, conversation_dict)
                 messages.append(assistant_response)
             st.rerun()
+
     for message in messages:
         if message['role'] == 'user':
             with st.chat_message(message['role']):
@@ -314,18 +344,22 @@ def display_chat():
         else:
             if 'name' in message:
                 agent_name = message.get('name', '')
-                agent_info = AGENTS.get(agent_name)
-                with st.chat_message(message['role'], avatar=agent_info['emoji']):
-                    st.markdown(
-                        f"""
-                        <div style='border-left: 5px solid {agent_info['color']}; padding-left: 10px;'>
-                            <strong>{agent_name} Agent:</strong> 
-                            <div>{message['content']}</div>
-                        </div>
-                        
-                        """,
-                        unsafe_allow_html=True
-                    )
+                agent_info = st.session_state.AGENTS.get(agent_name)
+                if agent_info:
+                    with st.chat_message(message['role'], avatar=agent_info['emoji']):
+                        st.markdown(
+                            f"""
+                            <div style='border-left: 5px solid {agent_info['color']}; padding-left: 10px;'>
+                                <strong>{agent_name} Agent:</strong> 
+                                <div>{message['content']}</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                else:
+                    # Handle the case where the agent is not in AGENTS
+                    with st.chat_message(message['role']):
+                        st.write(f"{agent_name}: {message['content']}")
 
     # Custom input field
     user_input = st.chat_input("Ask Moneta anything...")
@@ -336,13 +370,11 @@ def display_chat():
             messages.append(assistant_response)
         st.rerun()
 
-
-
 def send_message_to_backend(user_input, conversation_dict):
     payload = {
         "user_id": st.session_state.user_id,
         "message": user_input,
-        "use_case" : 'fsi_banking'
+        "use_case" : st.session_state.use_case  # Use selected use case
     }
     if conversation_dict.get('name') != 'New Conversation':
         payload["chat_id"] = conversation_dict.get('name')
@@ -365,6 +397,12 @@ def main():
     if not st.session_state.authenticated:
         login()
     else:
+        # Initialize AGENTS based on use_case
+        if st.session_state.use_case == 'fsi_insurance':
+            st.session_state.AGENTS = INS_AGENTS
+        else:
+            st.session_state.AGENTS = BANK_AGENTS
+
         if not st.session_state.conversations:
             st.session_state.conversations = fetch_conversations()
         

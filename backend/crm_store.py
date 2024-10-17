@@ -69,3 +69,25 @@ class CRMStore:
             enable_cross_partition_query=True
         ))
         return items[0] if items else None
+    
+
+    def get_customer_profile_by_client_id(self, client_id):
+        """
+        Retrieves a customer profile from Cosmos DB based on a client_id.
+        
+        Args:
+        - client_id (str): The client id of the customer to search for.
+        
+        Returns:
+        - dict: The customer profile, if found.
+        """
+        query = "SELECT * FROM c WHERE c.clientID = @client_id"
+        parameters = [
+            {"name": "@client_id", "value": client_id}
+        ]
+        items = list(self.container.query_items(
+            query=query,
+            parameters=parameters,
+            enable_cross_partition_query=True
+        ))
+        return items[0] if items else None
