@@ -22,7 +22,7 @@ param cosmosDbInsuranceContainerName string = 'user_fsi_ins_data'
 param cosmosDbBankingContainerName string = 'user_fsi_bank_data'
 
 @description('Name of the Cosmos DB container')
-param cosmosDbClientContainerName string = 'clientdata'
+param cosmosDbCRMContainerName string = 'clientdata'
 
 // Define the storage account name
 param storageAccountName string = 'sa${uniqueString(resourceGroup().id)}'
@@ -182,6 +182,33 @@ resource cosmosDbBankingContainer 'Microsoft.DocumentDB/databaseAccounts/sqlData
       id: cosmosDbBankingContainerName
       partitionKey: {
         paths: ['/user_id']
+        kind: 'Hash'
+      }
+      indexingPolicy: {
+        indexingMode: 'consistent'
+        automatic: true
+        includedPaths: [
+          {
+            path: '/*'
+          }
+        ]
+        excludedPaths: []
+      }
+    }
+    options: {}
+  }
+  tags: commonTags
+}
+
+// Create the Cosmos DB Container for Banking conversations
+resource cosmosDbCRMContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-05-15' = {
+  parent: cosmosDbDatabase
+  name: cosmosDbCRMContainerName
+  properties: {
+    resource: {
+      id: cosmosDbCRMContainerName
+      partitionKey: {
+        paths: ['/client_id']
         kind: 'Hash'
       }
       indexingPolicy: {
@@ -488,8 +515,11 @@ resource streamlitWebApp 'Microsoft.Web/sites@2022-03-01' = {
         {
           name: 'DOCKER_REGISTRY_SERVER_URL'
           value: 'https://index.docker.io'
+        } 
+        {
+          name: 'DISABLE_LOGIN'
+          value: 'False'
         }  
-        // Add other environment variables as needed
       ]
     }
     httpsOnly: true

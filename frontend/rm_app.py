@@ -18,16 +18,17 @@ st.set_page_config(
     layout="wide"
 )
 
+
 # Constants
-CLIENT_ID = ""
-TENANT_ID = ""
+CLIENT_ID = os.getenv('AZ_REG_APP_CLIENT_ID','')
+TENANT_ID = os.getenv('AZ_TENANT_ID','')
 BACKEND_URL = os.getenv('FUNCTION_APP_URL')
 REDIRECT_URI = os.getenv("WEB_REDIRECT_URI")
 DISABLE_LOGIN = os.getenv('DISABLE_LOGIN')
 
 # Pre-defined questions
 PREDEFINED_QUESTIONS = [
-    "Provide information about my customer John Doe"
+    "Provide information about my client John Doe"
 ]
 
 INS_AGENTS = {
