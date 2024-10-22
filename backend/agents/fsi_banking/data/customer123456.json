@@ -1,12 +1,13 @@
 {  
   "id": "123456",  
   "clientID": "123456",  
-  "firstName": "John",  
-  "lastName": "Doe",  
+  "firstName": "Pete",  
+  "lastName": "Mitchell",  
+  "fullName": "Pete Mitchell",  
   "dateOfBirth": "1980-01-01",  
   "nationality": "American",  
   "contactDetails": {  
-    "email": "john.doe@example.com",  
+    "email": "pete.mit@example.com",  
     "phone": "123-456-7890"  
   },  
   "address": {  

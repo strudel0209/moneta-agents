@@ -13,7 +13,7 @@ from requests_html import HTMLSession
 
 news_agent = Agent(  
     id="News",
-    system_message="""You are an assistant that fetch investement's asset news from the web for the client's portfolio positions.
+    system_message="""You are an assistant that fetch investement's news from the web for the client's portfolio positions.
         
         **Your Responsibilities:**
         - **Only respond to user requests that are relevant about investement's news and articles.**
@@ -22,7 +22,7 @@ news_agent = Agent(
     """,  
     llm=llm,  
     description="""Call this Agent if:
-        - You need to search for investement's asset news from the web
+        - You need to search for investement's news or articles from the web specifi to portfolio positions.
         DO NOT CALL THIS AGENT IF:  
         - You need to fetch generic investments answers or retrieve client specific data""",  
 )  
@@ -90,7 +90,7 @@ def get_feed(response):
     return ms_df
 
 
-@news_agent.register_tool(description="Search for investement's asset news from the web for the client's portfolio positions")
+@news_agent.register_tool(description="Search for investement's news from the web for the client's portfolio positions")
 def fetch_news(positions:Annotated[List[str],"The positions of the client's portfolio"]) -> str:
     """
     Search the web for investement's news for the specific for each of the positions passed as input into a pandas DataFrame.
@@ -105,6 +105,7 @@ def fetch_news(positions:Annotated[List[str],"The positions of the client's port
         url = 'https://www.morningstar.co.uk/uk/news/rss.aspx?lang=en-GB'
         response = get_source(url)
         news = get_feed(response)
-        return json.load(news)
+        #logging.info(f"News: {news}")
+        return json.dumps(news.values.tolist())        
     except Exception as e:
         logging.error(f"An unexpected error occurred in the 'fetch_news' function of the 'news_agent': {e}") 

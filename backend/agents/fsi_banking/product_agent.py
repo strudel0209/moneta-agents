@@ -45,7 +45,7 @@ def search(query: str):
                 {
                 "kind": "text",
                 "text": query,
-                "fields": "text_vector"
+                "fields": "contentVector"
                 }
             ],
             "queryType": "semantic",
@@ -62,7 +62,7 @@ def search(query: str):
     for result in response:
         result.pop("parent_id")
         result.pop("chunk_id")
-        result.pop("text_vector")
+        result.pop("contentVector")
         output.append(result)
 
     return output
