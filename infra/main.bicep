@@ -33,7 +33,7 @@ param functionAppName string = toLower('func${uniqueString(resourceGroup().id)}'
 @description('Application Insights Location')
 param appInsightsLocation string = location
 
-var functionAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-backend:v1.0.2' 
+var functionAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-backend:v1.0.3.4' 
 var webappAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-frontend:v1.0.1'
 
 // New parameters for Azure OpenAI

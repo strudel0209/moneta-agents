@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Set page config
 st.set_page_config(
-    page_title="Moneta - Agentic Assistant for Insurance",
+    page_title="Moneta - Agentic Assistant for FSI",
     initial_sidebar_state="expanded",
     layout="wide"
 )

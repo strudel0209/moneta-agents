@@ -1,22 +1,5 @@
 import azure.functions as func
-from azure.identity import DefaultAzureCredential
-import json
-import logging
-import openai
-import os
-import sys
-import requests
 
-from pydantic import BaseModel, Field
-
-from dotenv import load_dotenv
-load_dotenv()
-
-from conversation_store import ConversationStore
-from genai_vanilla_agents.workflow import Workflow
-from genai_vanilla_agents.conversation import Conversation
-from agents.fsi_insurance.group_chat import create_group_chat_insurance
-from agents.fsi_banking.group_chat import create_group_chat_banking
 
 
 
@@ -24,6 +7,25 @@ app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 @app.route(route="http_trigger")
 def main(req: func.HttpRequest) -> func.HttpResponse:
+    from azure.identity import DefaultAzureCredential
+    import json
+    import logging
+    import openai
+    import os
+    import sys
+    import requests
+
+    from pydantic import BaseModel, Field
+
+    from dotenv import load_dotenv
+    load_dotenv()
+
+    from conversation_store import ConversationStore
+    from genai_vanilla_agents.workflow import Workflow
+    from genai_vanilla_agents.conversation import Conversation
+    from agents.fsi_insurance.group_chat import create_group_chat_insurance
+    from agents.fsi_banking.group_chat import create_group_chat_banking
+
     """
     Example usage
     {"user_id":"rm3","message":"What policy is best to travel to Canada?"}

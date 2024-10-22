@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.30.23.60470",
-      "templateHash": "12286951848085445104"
+      "templateHash": "14771558924522041291"
     }
   },
   "parameters": {
@@ -164,14 +164,14 @@
     },
     "webAppName": {
       "type": "string",
-      "defaultValue": "[format('{0}-app', parameters('namePrefix'))]",
+      "defaultValue": "[format('{0}-agents', parameters('namePrefix'))]",
       "metadata": {
         "description": "Name of the Web App for Streamlit"
       }
     }
   },
   "variables": {
-    "functionAppDockerImage": "DOCKER|moneta.azurecr.io/moneta-ai-backend:v1.0.1",
+    "functionAppDockerImage": "DOCKER|moneta.azurecr.io/moneta-ai-backend:v1.0.2",
     "webappAppDockerImage": "DOCKER|moneta.azurecr.io/moneta-ai-frontend:v1.0.1",
     "commonTags": {
       "solution": "moneta-agentic-gbb-ai-1.0"
@@ -457,6 +457,10 @@
             {
               "name": "COSMOSDB_CONTAINER_FSI_INS_USER_NAME",
               "value": "[parameters('cosmosDbInsuranceContainerName')]"
+            },
+            {
+              "name": "COSMOSDB_CONTAINER_CLIENT_NAME",
+              "value": "[parameters('cosmosDbCRMContainerName')]"
             },
             {
               "name": "AZURE_OPENAI_ENDPOINT",
