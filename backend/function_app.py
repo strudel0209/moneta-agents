@@ -20,7 +20,7 @@ from agents.fsi_banking.group_chat import create_group_chat_banking
 
 
 
-app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
+app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
 @app.route(route="http_trigger")
 def main(req: func.HttpRequest) -> func.HttpResponse:

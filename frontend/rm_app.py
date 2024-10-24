@@ -25,6 +25,8 @@ TENANT_ID = os.getenv('AZ_TENANT_ID','')
 BACKEND_URL = os.getenv('FUNCTION_APP_URL')
 REDIRECT_URI = os.getenv("WEB_REDIRECT_URI")
 DISABLE_LOGIN = os.getenv('DISABLE_LOGIN')
+FUNCTION_APP_KEY = os.getenv('FUNCTION_APP_KEY')
+
 
 # Pre-defined questions
 PREDEFINED_QUESTIONS = [
@@ -177,8 +179,13 @@ def fetch_conversations():
         "load_history": True,
         "use_case" : st.session_state.use_case  # Use selected use case
     }
+    response = requests.post(f'{BACKEND_URL}/api/http_trigger?code={FUNCTION_APP_KEY}', json=payload)
+    logging.info(f"Response: {response}")
+    logging.info(f"Backend URL: {BACKEND_URL}")
+    logging.info(f"Function App Key: {FUNCTION_APP_KEY}")   
+    return response.json()
     try:
-        response = requests.post(f'{BACKEND_URL}/api/http_trigger', json=payload)
+        response = requests.post(f'{BACKEND_URL}/api/http_trigger?code={FUNCTION_APP_KEY}', json=payload)
         return response.json()
     except requests.exceptions.RequestException as e:
         st.error(f"Error fetching conversations: {e}")
@@ -379,9 +386,11 @@ def send_message_to_backend(user_input, conversation_dict):
     }
     if conversation_dict.get('name') != 'New Conversation':
         payload["chat_id"] = conversation_dict.get('name')
-    
+
     try:
-        response = requests.post(f'{BACKEND_URL}/api/http_trigger', json=payload)
+        # Include the FUNCTION_APP_KEY as a query parameter
+        url = f'{BACKEND_URL}/api/http_trigger?code={FUNCTION_APP_KEY}'
+        response = requests.post(url, json=payload)
         assistant_response = response.json()
         st.session_state.conversations[st.session_state.current_conversation_index]['name'] = assistant_response['chat_id']
         reply = assistant_response.get('reply', [])
