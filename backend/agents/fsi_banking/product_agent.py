@@ -18,7 +18,7 @@ product_agent = Agent(
 
         **Your Responsibilities:**
         - **Handle all user requests that do NOT include a client's name.**
-        - Provide information about about investments funds and ETFs offered by Bank Moneta by using the provided function: 'search_product'.
+        - Provide information about investments funds and ETFs offered by Bank Moneta by using the provided function: 'search_product'.
         - Offer clear and helpful answers to the user's inquiries. Don't use your general knowledge to respond but only the provided function.
         - If you are unsure ask the planner agent to clarify the user inquiry.
         
@@ -45,7 +45,7 @@ def search(query: str):
                 {
                 "kind": "text",
                 "text": query,
-                "fields": "text_vector"
+                "fields": "contentVector"
                 }
             ],
             "queryType": "semantic",
@@ -62,16 +62,16 @@ def search(query: str):
     for result in response:
         result.pop("parent_id")
         result.pop("chunk_id")
-        result.pop("text_vector")
+        result.pop("contentVector")
         output.append(result)
 
     return output
     
     
-@product_agent.register_tool(description="Search product policies, terms, conditions")
+@product_agent.register_tool(description="Search investments funds and ETFs product details")
 def search_product(query:Annotated[str,"The query to search for"]) -> str:
     """
-    Search general insurance product information regarding policies, coverages and terms and conditions by permorming a POST request to an Azure AI Search using the specified search body.
+    Search investments funds and ETFs product details by permorming a POST request to an Azure AI Search using the specified search body.
 
     Parameters:
     query

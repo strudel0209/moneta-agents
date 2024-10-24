@@ -9,9 +9,7 @@ azure-search-documents
 azure-identity
 yfinance
 azure-functions
-requests_html
 pydantic
-python-dotenv
 grpcio-tools
 starlette_gzip_request
 lxml_html_clean

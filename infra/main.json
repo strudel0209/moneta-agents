@@ -5,14 +5,10 @@
     "_generator": {
       "name": "bicep",
       "version": "0.30.23.60470",
-      "templateHash": "13476894625778935658"
+      "templateHash": "14771558924522041291"
     }
   },
   "parameters": {
-    "functionAppDockerImage": {
-      "type": "string",
-      "defaultValue": "DOCKER|moneta.azurecr.io/moneta-aiagentic-insurance:v1.0.0"
-    },
     "resourceGroupName": {
       "type": "string",
       "defaultValue": "[resourceGroup().name]",
@@ -36,35 +32,46 @@
     },
     "cosmosDbAccountName": {
       "type": "string",
-      "defaultValue": "[toLower(format('cdb{0}{1}', uniqueString(resourceGroup().id), parameters('namePrefix')))]",
+      "defaultValue": "[toLower(format('cdb{0}', uniqueString(resourceGroup().id)))]",
       "metadata": {
         "description": "Name of the Cosmos DB account"
       }
     },
     "cosmosDbDatabaseName": {
       "type": "string",
-      "defaultValue": "ConversationDB",
+      "defaultValue": "rminsights",
       "metadata": {
         "description": "Name of the Cosmos DB database"
       }
     },
-    "cosmosDbContainerName": {
+    "cosmosDbInsuranceContainerName": {
       "type": "string",
-      "defaultValue": "Conversations",
+      "defaultValue": "user_fsi_ins_data",
+      "metadata": {
+        "description": "Name of the Cosmos DB container"
+      }
+    },
+    "cosmosDbBankingContainerName": {
+      "type": "string",
+      "defaultValue": "user_fsi_bank_data",
+      "metadata": {
+        "description": "Name of the Cosmos DB container"
+      }
+    },
+    "cosmosDbCRMContainerName": {
+      "type": "string",
+      "defaultValue": "clientdata",
       "metadata": {
         "description": "Name of the Cosmos DB container"
       }
     },
     "storageAccountName": {
       "type": "string",
-      "defaultValue": "[toLower(format('sto{0}{1}', uniqueString(resourceGroup().id), parameters('namePrefix')))]",
-      "metadata": {
-        "description": "Name of the Storage Account"
-      }
+      "defaultValue": "[format('sa{0}', uniqueString(resourceGroup().id))]"
     },
     "functionAppName": {
       "type": "string",
-      "defaultValue": "[toLower(format('func{0}{1}', uniqueString(resourceGroup().id), parameters('namePrefix')))]",
+      "defaultValue": "[toLower(format('func{0}', uniqueString(resourceGroup().id)))]",
       "metadata": {
         "description": "Name of the Function App"
       }
@@ -77,7 +84,7 @@
       }
     },
     "AZURE_OPENAI_ENDPOINT": {
-      "type": "securestring",
+      "type": "string",
       "metadata": {
         "description": "Azure OpenAI Endpoint"
       }
@@ -96,13 +103,12 @@
     },
     "AZURE_OPENAI_API_VERSION": {
       "type": "string",
-      "defaultValue": "2024-05-01-preview",
       "metadata": {
         "description": "Azure OpenAI API Version"
       }
     },
     "AI_SEARCH_ENDPOINT": {
-      "type": "securestring",
+      "type": "string",
       "metadata": {
         "description": "AI Search Endpoint"
       }
@@ -113,52 +119,76 @@
         "description": "AI Search Key"
       }
     },
-    "AI_SEARCH_INDEX_NAME": {
+    "AI_SEARCH_CIO_INDEX_NAME": {
       "type": "string",
       "metadata": {
-        "description": "AI Search Index Name"
+        "description": "AI_SEARCH_CIO_INDEX_NAME"
       }
     },
-    "AI_SEARCH_SEMANTIC_CONFIGURATION": {
+    "AI_SEARCH_CIO_SEMANTIC_CONFIGURATION": {
       "type": "string",
       "metadata": {
-        "description": "AI Search Semantic Configuration"
+        "description": "AI_SEARCH_CIO_SEMANTIC_CONFIGURATION"
+      }
+    },
+    "AI_SEARCH_FUNDS_INDEX_NAME": {
+      "type": "string",
+      "metadata": {
+        "description": "AI_SEARCH_FUNDS_INDEX_NAME"
+      }
+    },
+    "AI_SEARCH_FUNDS_SEMANTIC_CONFIGURATION": {
+      "type": "string",
+      "metadata": {
+        "description": "AI_SEARCH_FUNDS_SEMANTIC_CONFIGURATION"
+      }
+    },
+    "AI_SEARCH_INS_INDEX_NAME": {
+      "type": "string",
+      "metadata": {
+        "description": "AI_SEARCH_INS_INDEX_NAME"
+      }
+    },
+    "AI_SEARCH_INS_SEMANTIC_CONFIGURATION": {
+      "type": "string",
+      "metadata": {
+        "description": "AI_SEARCH_INS_SEMANTIC_CONFIGURATION"
       }
     },
     "appServicePlanName": {
       "type": "string",
-      "defaultValue": "[format('{0}-streamlit-plan', parameters('namePrefix'))]",
+      "defaultValue": "[format('{0}-plan', parameters('namePrefix'))]",
       "metadata": {
         "description": "Name of the App Service Plan for Streamlit"
       }
     },
     "webAppName": {
       "type": "string",
-      "defaultValue": "[format('{0}-streamlit-app', parameters('namePrefix'))]",
+      "defaultValue": "[format('{0}-agents', parameters('namePrefix'))]",
       "metadata": {
         "description": "Name of the Web App for Streamlit"
       }
     }
   },
   "variables": {
+    "functionAppDockerImage": "DOCKER|moneta.azurecr.io/moneta-ai-backend:v1.0.2",
+    "webappAppDockerImage": "DOCKER|moneta.azurecr.io/moneta-ai-frontend:v1.0.1",
     "commonTags": {
-      "solution": "moneta-ins-gbb-ai-1.0"
+      "solution": "moneta-agentic-gbb-ai-1.0"
     }
   },
   "resources": [
     {
-      "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "2022-09-01",
-      "name": "[parameters('storageAccountName')]",
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2021-06-01",
+      "name": "logAnalyticsWorkspace",
       "location": "[parameters('location')]",
-      "sku": {
-        "name": "Standard_LRS"
-      },
-      "kind": "StorageV2",
       "properties": {
-        "accessTier": "Hot"
+        "retentionInDays": 30
       },
-      "tags": "[variables('commonTags')]"
+      "tags": {
+        "solution": "moneta-ins-gbb-ai-1.0"
+      }
     },
     {
       "type": "Microsoft.Insights/components",
@@ -167,8 +197,12 @@
       "location": "[parameters('appInsightsLocation')]",
       "kind": "web",
       "properties": {
-        "Application_Type": "web"
-      }
+        "Application_Type": "web",
+        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', 'logAnalyticsWorkspace')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', 'logAnalyticsWorkspace')]"
+      ]
     },
     {
       "type": "Microsoft.DocumentDB/databaseAccounts",
@@ -216,13 +250,75 @@
     {
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
       "apiVersion": "2022-05-15",
-      "name": "[format('{0}/{1}/{2}', parameters('cosmosDbAccountName'), parameters('cosmosDbDatabaseName'), parameters('cosmosDbContainerName'))]",
+      "name": "[format('{0}/{1}/{2}', parameters('cosmosDbAccountName'), parameters('cosmosDbDatabaseName'), parameters('cosmosDbInsuranceContainerName'))]",
       "properties": {
         "resource": {
-          "id": "[parameters('cosmosDbContainerName')]",
+          "id": "[parameters('cosmosDbInsuranceContainerName')]",
           "partitionKey": {
             "paths": [
-              "/userId"
+              "/user_id"
+            ],
+            "kind": "Hash"
+          },
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": []
+          }
+        },
+        "options": {}
+      },
+      "tags": "[variables('commonTags')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), parameters('cosmosDbDatabaseName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2022-05-15",
+      "name": "[format('{0}/{1}/{2}', parameters('cosmosDbAccountName'), parameters('cosmosDbDatabaseName'), parameters('cosmosDbBankingContainerName'))]",
+      "properties": {
+        "resource": {
+          "id": "[parameters('cosmosDbBankingContainerName')]",
+          "partitionKey": {
+            "paths": [
+              "/user_id"
+            ],
+            "kind": "Hash"
+          },
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": []
+          }
+        },
+        "options": {}
+      },
+      "tags": "[variables('commonTags')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('cosmosDbAccountName'), parameters('cosmosDbDatabaseName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2022-05-15",
+      "name": "[format('{0}/{1}/{2}', parameters('cosmosDbAccountName'), parameters('cosmosDbDatabaseName'), parameters('cosmosDbCRMContainerName'))]",
+      "properties": {
+        "resource": {
+          "id": "[parameters('cosmosDbCRMContainerName')]",
+          "partitionKey": {
+            "paths": [
+              "/client_id"
             ],
             "kind": "Hash"
           },
@@ -249,30 +345,53 @@
       "apiVersion": "2022-03-01",
       "name": "[format('{0}-plan', parameters('functionAppName'))]",
       "location": "[parameters('location')]",
+      "kind": "Linux",
       "sku": {
-        "name": "Y1",
-        "tier": "Dynamic"
+        "name": "B1",
+        "tier": "Basic"
       },
-      "kind": "functionapp",
       "properties": {
-        "reserved": false
+        "reserved": true
       },
       "tags": "[variables('commonTags')]"
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2022-05-01",
+      "name": "[parameters('storageAccountName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "accessTier": "Hot"
+      },
+      "tags": "[variables('commonTags')]"
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices",
+      "apiVersion": "2022-05-01",
+      "name": "[format('{0}/{1}', parameters('storageAccountName'), 'default')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
     },
     {
       "type": "Microsoft.Web/sites",
       "apiVersion": "2022-03-01",
       "name": "[parameters('functionAppName')]",
       "location": "[parameters('location')]",
-      "kind": "functionapp",
       "identity": {
         "type": "SystemAssigned"
       },
+      "kind": "functionapp",
       "properties": {
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', format('{0}-plan', parameters('functionAppName')))]",
+        "httpsOnly": true,
         "siteConfig": {
-          "pythonVersion": "3.10",
-          "linuxFxVersion": "[parameters('functionAppDockerImage')]",
+          "pythonVersion": "3.11",
+          "linuxFxVersion": "[variables('functionAppDockerImage')]",
           "alwaysOn": true,
           "appSettings": [
             {
@@ -284,12 +403,8 @@
               "value": "~4"
             },
             {
-              "name": "FUNCTIONS_WORKER_RUNTIME",
-              "value": "python"
-            },
-            {
-              "name": "WEBSITE_RUN_FROM_PACKAGE",
-              "value": "1"
+              "name": "AzureWebJobsFeatureFlags",
+              "value": "EnableWorkerIndexing"
             },
             {
               "name": "AzureWebJobsStorage__serviceUri",
@@ -308,6 +423,22 @@
               "value": "[format('https://{0}.table.core.windows.net', parameters('storageAccountName'))]"
             },
             {
+              "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
+              "value": "false"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "python"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_PROCESS_COUNT",
+              "value": "1"
+            },
+            {
+              "name": "WEBSITE_MAX_DYNAMIC_APPLICATION_SCALE_OUT",
+              "value": "1"
+            },
+            {
               "name": "DOCKER_REGISTRY_SERVER_URL",
               "value": "https://index.docker.io"
             },
@@ -320,8 +451,16 @@
               "value": "[parameters('cosmosDbDatabaseName')]"
             },
             {
-              "name": "COSMOSDB_CONTAINER_USER_NAME",
-              "value": "[parameters('cosmosDbContainerName')]"
+              "name": "COSMOSDB_CONTAINER_FSI_BANK_USER_NAME",
+              "value": "[parameters('cosmosDbBankingContainerName')]"
+            },
+            {
+              "name": "COSMOSDB_CONTAINER_FSI_INS_USER_NAME",
+              "value": "[parameters('cosmosDbInsuranceContainerName')]"
+            },
+            {
+              "name": "COSMOSDB_CONTAINER_CLIENT_NAME",
+              "value": "[parameters('cosmosDbCRMContainerName')]"
             },
             {
               "name": "AZURE_OPENAI_ENDPOINT",
@@ -348,12 +487,28 @@
               "value": "[parameters('AI_SEARCH_KEY')]"
             },
             {
-              "name": "AI_SEARCH_INDEX_NAME",
-              "value": "[parameters('AI_SEARCH_INDEX_NAME')]"
+              "name": "AI_SEARCH_CIO_INDEX_NAME",
+              "value": "[parameters('AI_SEARCH_CIO_INDEX_NAME')]"
             },
             {
-              "name": "AI_SEARCH_SEMANTIC_CONFIGURATION",
-              "value": "[parameters('AI_SEARCH_SEMANTIC_CONFIGURATION')]"
+              "name": "AI_SEARCH_CIO_SEMANTIC_CONFIGURATION",
+              "value": "[parameters('AI_SEARCH_CIO_SEMANTIC_CONFIGURATION')]"
+            },
+            {
+              "name": "AI_SEARCH_FUNDS_INDEX_NAME",
+              "value": "[parameters('AI_SEARCH_FUNDS_INDEX_NAME')]"
+            },
+            {
+              "name": "AI_SEARCH_FUNDS_SEMANTIC_CONFIGURATION",
+              "value": "[parameters('AI_SEARCH_FUNDS_SEMANTIC_CONFIGURATION')]"
+            },
+            {
+              "name": "AI_SEARCH_INS_INDEX_NAME",
+              "value": "[parameters('AI_SEARCH_INS_INDEX_NAME')]"
+            },
+            {
+              "name": "AI_SEARCH_INS_SEMANTIC_CONFIGURATION",
+              "value": "[parameters('AI_SEARCH_INS_SEMANTIC_CONFIGURATION')]"
             }
           ]
         }
@@ -362,6 +517,66 @@
       "dependsOn": [
         "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]",
         "[resourceId('Microsoft.Web/serverfarms', format('{0}-plan', parameters('functionAppName')))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-04-01-preview",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', parameters('storageAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.Web/sites', parameters('functionAppName')), resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), 'StorageBlobDataContributor')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2022-03-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-04-01-preview",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', parameters('storageAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.Web/sites', parameters('functionAppName')), resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), 'StorageBlobDataOwner')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2022-03-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-04-01-preview",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', parameters('storageAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.Web/sites', parameters('functionAppName')), resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), 'StorageQueueDataContributor')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2022-03-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-04-01-preview",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', parameters('storageAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.Web/sites', parameters('functionAppName')), resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), 'StorageAccountContributor')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '17d1049b-9a84-46fb-8f53-869881c3d3ab')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2022-03-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
       ]
     },
@@ -381,13 +596,31 @@
       ]
     },
     {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments",
+      "apiVersion": "2021-04-15",
+      "name": "[format('{0}/{1}', parameters('cosmosDbAccountName'), guid(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName')), resourceId('Microsoft.Web/sites', parameters('functionAppName')), resourceId('Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions', parameters('cosmosDbAccountName'), '00000000-0000-0000-0000-000000000002')))]",
+      "properties": {
+        "roleDefinitionId": "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions', parameters('cosmosDbAccountName'), '00000000-0000-0000-0000-000000000002')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2022-03-01', 'full').identity.principalId]",
+        "scope": "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosDbAccountName'))]",
+        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]"
+      ]
+    },
+    {
       "type": "Microsoft.Web/serverfarms",
       "apiVersion": "2022-03-01",
       "name": "[parameters('appServicePlanName')]",
       "location": "[parameters('location')]",
+      "kind": "Linux",
       "sku": {
         "name": "B1",
         "tier": "Basic"
+      },
+      "properties": {
+        "reserved": true
       },
       "tags": "[variables('commonTags')]"
     },
@@ -399,7 +632,7 @@
       "properties": {
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
         "siteConfig": {
-          "linuxFxVersion": "PYTHON|3.10",
+          "linuxFxVersion": "[variables('webappAppDockerImage')]",
           "appSettings": [
             {
               "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
@@ -407,7 +640,15 @@
             },
             {
               "name": "FUNCTION_APP_URL",
-              "value": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2022-03-01').defaultHostName]"
+              "value": "[format('https://{0}', reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2022-03-01').defaultHostName)]"
+            },
+            {
+              "name": "DOCKER_REGISTRY_SERVER_URL",
+              "value": "https://index.docker.io"
+            },
+            {
+              "name": "DISABLE_LOGIN",
+              "value": "False"
             }
           ]
         },
@@ -418,19 +659,6 @@
       "dependsOn": [
         "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]",
         "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Web/sites/sourcecontrols",
-      "apiVersion": "2022-03-01",
-      "name": "[format('{0}/{1}', parameters('webAppName'), 'web')]",
-      "properties": {
-        "repoUrl": "https://github.com/albertaga27/aoai-insurance-rm-vanilla-agents",
-        "branch": "main",
-        "isManualIntegration": true
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]"
       ]
     }
   ]

@@ -4,6 +4,8 @@ from agents.fsi_banking.user_proxy_agent import user_proxy_agent
 from agents.fsi_banking.crm_agent import crm_agent
 from agents.fsi_banking.product_agent import product_agent
 from agents.fsi_banking.planner_agent import planner_agent
+from agents.fsi_banking.cio_agent import cio_agent
+from agents.fsi_banking.news_agent import news_agent
 from agents.fsi_banking.config import llm
 
 def create_group_chat_banking():
@@ -18,7 +20,7 @@ def create_group_chat_banking():
     team = Team(
         id="group_chat",
         description="A group chat with multiple agents",
-        members=[user_proxy_agent, planner_agent, crm_agent, product_agent],
+        members=[user_proxy_agent, planner_agent, crm_agent, product_agent, cio_agent, news_agent],
         llm=llm, 
         stop_callback=lambda msgs: msgs[-1].get("content", "").strip().lower() == "terminate",
     )

@@ -347,6 +347,10 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
           value: cosmosDbInsuranceContainerName
         }
         {
+          name: 'COSMOSDB_CONTAINER_CLIENT_NAME'
+          value: cosmosDbCRMContainerName
+        }
+        {
           name: 'AZURE_OPENAI_ENDPOINT'
           value: AZURE_OPENAI_ENDPOINT
         }
@@ -480,7 +484,7 @@ resource cosmosDbDataContributorRoleAssignment 'Microsoft.DocumentDB/databaseAcc
 param appServicePlanName string = '${namePrefix}-plan'
 
 @description('Name of the Web App for Streamlit')
-param webAppName string = '${namePrefix}-app'
+param webAppName string = '${namePrefix}-agents'
 
 // Streamlit App Service Plan
 resource streamlitServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {

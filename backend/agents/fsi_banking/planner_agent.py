@@ -24,6 +24,7 @@ planner_agent = Agent(
         - You need to close the conversation after the advisor's request has been resolved.
         DO NOT CALL THIS AGENT IF:  
         - You need to search for client's data 
-        - You need to provide product or policies answers
+        - You need to provide product or investments answers
+        - You need to search for investements news or articles
        """,  
 )  

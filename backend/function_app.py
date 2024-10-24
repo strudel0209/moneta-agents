@@ -1,4 +1,5 @@
 import azure.functions as func
+
 from azure.identity import DefaultAzureCredential
 import json
 import logging

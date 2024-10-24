@@ -14,17 +14,20 @@ from azure.search.documents import SearchClient
 
 cio_agent = Agent(  
     id="CIO",
-    system_message="""You are an assistant that retrieve investement research and house view from Moneta Bank.
+    system_message="""You are an assistant that retrieve investement researches from documents produced by the CIO (Chief Investment Office) and in-house view from Moneta Bank.
         
         **Your Responsibilities:**
+        - Provide information about researches from documents produced by the CIO (Chief Investment Office) and in-house view from Moneta Bank by using the provided function: 'search_cio'.
+        - Offer clear and helpful answers to the user's inquiries. Don't use your general knowledge to respond but only the provided function.
+        - If you are unsure ask the planner agent to clarify the user inquiry.
         - 
     
     """,  
     llm=llm,  
     description="""Call this Agent if:
-        - You need to retrieve specific retrieve investement research and house view from Moneta Ban
+        - You need to retrieve specific retrieve investement research and in-house view from Moneta Bank.
         DO NOT CALL THIS AGENT IF:  
-        - You need to fetch generic investments answers about assets or retrieve client's specific data or news from the web""",  
+        - You need to search for funds or etf product details or retrieve client's specific data or news from the web""",  
 )  
 
 
@@ -42,7 +45,7 @@ def search(query: str):
                 {
                 "kind": "text",
                 "text": query,
-                "fields": "text_vector"
+                "fields": "contentVector"
                 }
             ],
             "queryType": "semantic",
@@ -59,16 +62,18 @@ def search(query: str):
     for result in response:
         result.pop("parent_id")
         result.pop("chunk_id")
-        result.pop("text_vector")
+        result.pop("contentVector")
         output.append(result)
 
+    logging.info(f"CIO Agent RAG Query= {query}")
+    logging.info(f"CIO Agent RAG results= {output}")
     return output
     
     
-@cio_agent.register_tool(description="Search investement overview, in house investment view from Moneta Bank.")
-def search_product(query:Annotated[str,"The query to search for"]) -> str:
+@cio_agent.register_tool(description="Search investement overview, in-house investment view and reccomendations from Moneta Bank and CIO.")
+def search_cio(query:Annotated[str,"The query to search for"]) -> str:
     """
-    Search general insurance product information regarding policies, coverages and terms and conditions by permorming a POST request to an Azure AI Search using the specified search body.
+    Search and retrieve investement research and in-house views from Moneta Bank by permorming a POST request to an Azure AI Search using the specified search body.
 
     Parameters:
     query
