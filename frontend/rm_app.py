@@ -42,8 +42,8 @@ INS_AGENTS = {
 
 # Pre-defined questions for banking
 BANK_PREDEFINED_QUESTIONS = [
-    "Provide me a summary in a table of the sector exposure of the portfolio's positions of my client Pete Mitchell",
-    "Can you tell me top 3 news in general from the market today?"
+    "Provide me a summary in a table of the sector exposure of the portfolio's positions of my client id 123456",
+    "What are our CIO in-house view about Currencies and commodities?"
 ]
 
 BANK_AGENTS = {

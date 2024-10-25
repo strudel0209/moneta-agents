@@ -33,8 +33,8 @@ param functionAppName string = toLower('func${uniqueString(resourceGroup().id)}'
 @description('Application Insights Location')
 param appInsightsLocation string = location
 
-var functionAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-backend:v1.0.3.4' 
-var webappAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-frontend:v1.0.1'
+var functionAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-backend:v1.0.4' 
+var webappAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-frontend:v1.0.2'
 
 // New parameters for Azure OpenAI
 @description('Azure OpenAI Endpoint')
@@ -523,7 +523,23 @@ resource streamlitWebApp 'Microsoft.Web/sites@2022-03-01' = {
         {
           name: 'DISABLE_LOGIN'
           value: 'False'
+        }
+        {
+          name: 'AZ_TENANT_ID'
+          value: ''
         }  
+        {
+          name: 'AZ_REG_APP_CLIENT_ID'
+          value: ''
+        }    
+        {
+          name: 'AZ_REG_APP_SCOPE'
+          value: 'User.Read'
+        } 
+        {
+          name: 'WEB_REDIRECT_URI'
+          value: ''
+        } 
       ]
     }
     httpsOnly: true
