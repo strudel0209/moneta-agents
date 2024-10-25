@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Set page config
 st.set_page_config(
-    page_title="Moneta - Agentic Assistant for FSI",
+    page_title="Moneta - Agentic Assistant for Insurance",
     initial_sidebar_state="expanded",
     layout="wide"
 )
@@ -25,6 +25,8 @@ TENANT_ID = os.getenv('AZ_TENANT_ID','')
 BACKEND_URL = os.getenv('FUNCTION_APP_URL')
 REDIRECT_URI = os.getenv("WEB_REDIRECT_URI")
 DISABLE_LOGIN = os.getenv('DISABLE_LOGIN')
+FUNCTION_APP_KEY = os.getenv('FUNCTION_APP_KEY')
+
 
 # Pre-defined questions for insurance
 INS_PREDEFINED_QUESTIONS = [
@@ -186,8 +188,9 @@ def fetch_conversations():
         "load_history": True,
         "use_case" : st.session_state.use_case  # Use selected use case
     }
+
     try:
-        response = requests.post(f'{BACKEND_URL}/api/http_trigger', json=payload)
+        response = requests.post(f'{BACKEND_URL}/api/http_trigger?code={FUNCTION_APP_KEY}', json=payload)
         return response.json()
     except requests.exceptions.RequestException as e:
         st.error(f"Error fetching conversations: {e}")
@@ -331,12 +334,8 @@ def display_chat():
         st.write("Please start a new conversation or select an existing one from the sidebar.")
         return
 
-    question_options = []
     # Dropdown for pre-defined questions
-    if st.session_state.use_case == 'fsi_insurance':
-        question_options = ["Select a predefined question or type your own below"] + INS_PREDEFINED_QUESTIONS
-    else:
-        question_options = ["Select a predefined question or type your own below"] + BANK_PREDEFINED_QUESTIONS    
+    question_options = ["Select a predefined question or type your own below"] + PREDEFINED_QUESTIONS
     selected_question = st.selectbox("", question_options, key="question_selectbox")
                                      
     conversation_dict = st.session_state.conversations[st.session_state.current_conversation_index]
@@ -392,9 +391,11 @@ def send_message_to_backend(user_input, conversation_dict):
     }
     if conversation_dict.get('name') != 'New Conversation':
         payload["chat_id"] = conversation_dict.get('name')
-    
+
     try:
-        response = requests.post(f'{BACKEND_URL}/api/http_trigger', json=payload)
+        # Include the FUNCTION_APP_KEY as a query parameter
+        url = f'{BACKEND_URL}/api/http_trigger?code={FUNCTION_APP_KEY}'
+        response = requests.post(url, json=payload)
         assistant_response = response.json()
         st.session_state.conversations[st.session_state.current_conversation_index]['name'] = assistant_response['chat_id']
         reply = assistant_response.get('reply', [])

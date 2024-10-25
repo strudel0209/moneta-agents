@@ -1,4 +1,5 @@
-// main.bicep
+var functionAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-backend:v1.1.3.10' 
+var webappAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-frontend:v1.1.2'
 
 @description('Name of the Resource Group')
 param resourceGroupName string = resourceGroup().name
@@ -15,13 +16,13 @@ param cosmosDbAccountName string = toLower('cdb${uniqueString(resourceGroup().id
 @description('Name of the Cosmos DB database')
 param cosmosDbDatabaseName string = 'rminsights'
 
-@description('Name of the Cosmos DB container')
+@description('Name of the Cosmos DB container for insurance')
 param cosmosDbInsuranceContainerName string = 'user_fsi_ins_data'
 
-@description('Name of the Cosmos DB container')
+@description('Name of the Cosmos DB container for banking')
 param cosmosDbBankingContainerName string = 'user_fsi_bank_data'
 
-@description('Name of the Cosmos DB container')
+@description('Name of the Cosmos DB container for CRM data')
 param cosmosDbCRMContainerName string = 'clientdata'
 
 // Define the storage account name
@@ -33,9 +34,6 @@ param functionAppName string = toLower('func${uniqueString(resourceGroup().id)}'
 @description('Application Insights Location')
 param appInsightsLocation string = location
 
-var functionAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-backend:v1.0.4' 
-var webappAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-frontend:v1.0.2'
-
 // New parameters for Azure OpenAI
 @description('Azure OpenAI Endpoint')
 param AZURE_OPENAI_ENDPOINT string
@@ -45,55 +43,43 @@ param AZURE_OPENAI_ENDPOINT string
 param AZURE_OPENAI_KEY string
 
 @description('Azure OpenAI Model')
-param AZURE_OPENAI_MODEL string
+param AZURE_OPENAI_DEPLOYMENT_NAME string
 
 @description('Azure OpenAI API Version')
-param AZURE_OPENAI_API_VERSION string
+param AZURE_OPENAI_API_VERSION string = '2024-06-01'
 
-// New parameters for AI Search
-@description('AI Search Endpoint')
-param AI_SEARCH_ENDPOINT string
+// Optional parameters to override AI Search settings
+@description('Override AI Search Endpoint (optional)')
+param overrideAiSearchEndpoint string = ''
 
-@description('AI Search Key')
+@description('Override AI Search Key (optional)')
 @secure()
-param AI_SEARCH_KEY string
+param overrideAiSearchKey string = ''
 
-@description('AI_SEARCH_CIO_INDEX_NAME')
-param AI_SEARCH_CIO_INDEX_NAME string
-
-@description('AI_SEARCH_CIO_SEMANTIC_CONFIGURATION')
-param AI_SEARCH_CIO_SEMANTIC_CONFIGURATION string
-
-@description('AI_SEARCH_FUNDS_INDEX_NAME')
-param AI_SEARCH_FUNDS_INDEX_NAME string
-
-@description('AI_SEARCH_FUNDS_SEMANTIC_CONFIGURATION')
-param AI_SEARCH_FUNDS_SEMANTIC_CONFIGURATION string
-
-@description('AI_SEARCH_INS_INDEX_NAME')
-param AI_SEARCH_INS_INDEX_NAME string
-
-@description('AI_SEARCH_INS_SEMANTIC_CONFIGURATION')
-param AI_SEARCH_INS_SEMANTIC_CONFIGURATION string
-
+// Variables for AI Search index names and configurations
+var aiSearchCioIndexName = 'cio-index'
+var aiSearchCioSemanticConfiguration = 'cio-semantic-config'
+var aiSearchFundsIndexName = 'funds-index'
+var aiSearchFundsSemanticConfiguration = 'funds-semantic-config'
+var aiSearchInsIndexName = 'ins-index'
+var aiSearchInsSemanticConfiguration = 'ins-semantic-config'
 
 // Define common tags  
 var commonTags = {  
   solution: 'moneta-agentic-gbb-ai-1.0'    
 }
 
+// Log Analytics Workspace
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {  
   name: 'logAnalyticsWorkspace'  
   location: location  
   properties: {  
     retentionInDays: 30  
   }  
-  tags: {  
-    solution: 'moneta-ins-gbb-ai-1.0'  
-  }  
+  tags: commonTags
 }  
 
-// Create an Application Insights instance
+// Application Insights instance
 resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: '${functionAppName}-ai'
   location: appInsightsLocation
@@ -104,8 +90,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-
-// Create a Cosmos DB Account
+// Cosmos DB Account
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' = {
   name: cosmosDbAccountName
   location: location
@@ -133,7 +118,7 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' = {
   tags: commonTags
 }
 
-// Create the Cosmos DB Database
+// Cosmos DB Database
 resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2022-05-15' = {
   parent: cosmosDbAccount
   name: cosmosDbDatabaseName
@@ -146,7 +131,7 @@ resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@20
   tags: commonTags
 }
 
-// Create the Cosmos DB Container for insurance conversations
+// Cosmos DB Containers
 resource cosmosDbInsuranceContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-05-15' = {
   parent: cosmosDbDatabase
   name: cosmosDbInsuranceContainerName
@@ -173,7 +158,6 @@ resource cosmosDbInsuranceContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDa
   tags: commonTags
 }
 
-// Create the Cosmos DB Container for Banking conversations
 resource cosmosDbBankingContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-05-15' = {
   parent: cosmosDbDatabase
   name: cosmosDbBankingContainerName
@@ -200,7 +184,6 @@ resource cosmosDbBankingContainer 'Microsoft.DocumentDB/databaseAccounts/sqlData
   tags: commonTags
 }
 
-// Create the Cosmos DB Container for Banking conversations
 resource cosmosDbCRMContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-05-15' = {
   parent: cosmosDbDatabase
   name: cosmosDbCRMContainerName
@@ -227,7 +210,7 @@ resource cosmosDbCRMContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabase
   tags: commonTags
 }
 
-// Create a Service Plan for Function App
+// Service Plan for Function App
 resource servicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: '${functionAppName}-plan'
   location: location
@@ -242,7 +225,7 @@ resource servicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   tags: commonTags
 }
 
-// Define the storage account
+// Storage Account
 resource storageAccount 'Microsoft.Storage/storageAccounts@2022-05-01' = {
   name: storageAccountName
   location: location
@@ -256,13 +239,34 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-05-01' = {
   tags: commonTags
 }
 
-// Define the blob service
+// Blob Service
 resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2022-05-01' = {
   parent: storageAccount
   name: 'default'
 }
 
-// Create the Function App with Managed Identity
+// AI Search Service (Azure Cognitive Search)
+resource aiSearchService 'Microsoft.Search/searchServices@2020-08-01' = if (empty(overrideAiSearchEndpoint)) {
+  name: toLower('search${uniqueString(resourceGroup().id)}')
+  location: location
+  sku: {
+    name: 'free'
+  }
+  properties: {
+    replicaCount: 1
+    partitionCount: 1
+    hostingMode: 'default'
+  }
+  tags: commonTags
+}
+
+// Get AI Search admin key
+var aiSearchAdminKey = empty(overrideAiSearchKey) ? listAdminKeys(aiSearchService.id, '2020-08-01').primaryKey : overrideAiSearchKey
+
+// Set AI Search endpoint
+var aiSearchEndpoint = empty(overrideAiSearchEndpoint) ? 'https://${aiSearchService.name}.search.windows.net' : overrideAiSearchEndpoint
+
+// Function App with Managed Identity
 resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
   name: functionAppName
   location: location
@@ -356,7 +360,7 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
         }
         {
           name: 'AZURE_OPENAI_MODEL'
-          value: AZURE_OPENAI_MODEL
+          value: AZURE_OPENAI_DEPLOYMENT_NAME
         }
         {
           name: 'AZURE_OPENAI_API_VERSION'
@@ -364,40 +368,39 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
         }
         {
           name: 'AI_SEARCH_ENDPOINT'
-          value: AI_SEARCH_ENDPOINT
+          value: aiSearchEndpoint
         }
         {
           name: 'AI_SEARCH_KEY'
-          value: AI_SEARCH_KEY
+          value: aiSearchAdminKey
         }
         {
           name: 'AI_SEARCH_CIO_INDEX_NAME'
-          value: AI_SEARCH_CIO_INDEX_NAME
+          value: aiSearchCioIndexName
         }
         {
           name: 'AI_SEARCH_CIO_SEMANTIC_CONFIGURATION'
-          value: AI_SEARCH_CIO_SEMANTIC_CONFIGURATION
+          value: aiSearchCioSemanticConfiguration
         }
         {
           name: 'AI_SEARCH_FUNDS_INDEX_NAME'
-          value: AI_SEARCH_FUNDS_INDEX_NAME
+          value: aiSearchFundsIndexName
         }
         {
           name: 'AI_SEARCH_FUNDS_SEMANTIC_CONFIGURATION'
-          value: AI_SEARCH_FUNDS_SEMANTIC_CONFIGURATION
+          value: aiSearchFundsSemanticConfiguration
         }
         {
           name: 'AI_SEARCH_INS_INDEX_NAME'
-          value: AI_SEARCH_INS_INDEX_NAME
+          value: aiSearchInsIndexName
         }
         {
           name: 'AI_SEARCH_INS_SEMANTIC_CONFIGURATION'
-          value: AI_SEARCH_INS_SEMANTIC_CONFIGURATION
+          value: aiSearchInsSemanticConfiguration
         }
       ]
     }
   }
-  
   tags: commonTags
 }
 
@@ -442,7 +445,7 @@ resource functionAppStorageAccountContributorRole 'Microsoft.Authorization/roleA
   }
 }
 
-// Grant Cosmos DB access to the Function App's Managed Identity
+// Cosmos DB Role Assignments
 resource cosmosDbRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   scope: cosmosDbAccount
   name: 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Built-in role: Cosmos DB Account Reader Role
@@ -461,30 +464,29 @@ resource cosmosDbRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-04
   ]
 }
 
-// Cosmos DB role assignment
-resource cosmosDBDataContributorRoleDefinition 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions@2021-04-15' existing = {
+resource cosmosDbDataContributorRoleDefinition 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions@2021-04-15' existing = {
   parent: cosmosDbAccount
   name: '00000000-0000-0000-0000-000000000002' // Built-in Data Contributor Role
 }
 
-resource cosmosDBRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2021-04-15' = {
+resource cosmosDbDataContributorRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2021-04-15' = {
   parent: cosmosDbAccount
-  name: guid(cosmosDbAccount.id, functionApp.id, cosmosDBDataContributorRoleDefinition.id)
+  name: guid(cosmosDbAccount.id, functionApp.id, cosmosDbDataContributorRoleDefinition.id)
   properties: {
-    roleDefinitionId: cosmosDBDataContributorRoleDefinition.id
+    roleDefinitionId: cosmosDbDataContributorRoleDefinition.id
     principalId: functionApp.identity.principalId
     scope: cosmosDbAccount.id
   }
 }
 
-
+// App Service Plan for Streamlit
 @description('Name of the App Service Plan for Streamlit')
 param appServicePlanName string = '${namePrefix}-plan'
 
 @description('Name of the Web App for Streamlit')
-param webAppName string = '${namePrefix}-agents'
+param webAppName string = '${namePrefix}-app'
 
-// Create an App Service Plan
+// Streamlit App Service Plan
 resource streamlitServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: appServicePlanName
   location: location
@@ -499,7 +501,7 @@ resource streamlitServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   tags: commonTags
 }
 
-// Create the Web App
+// Streamlit Web App
 resource streamlitWebApp 'Microsoft.Web/sites@2022-03-01' = {
   name: webAppName
   location: location
@@ -540,6 +542,10 @@ resource streamlitWebApp 'Microsoft.Web/sites@2022-03-01' = {
           name: 'WEB_REDIRECT_URI'
           value: ''
         } 
+        {
+          name: 'FUNCTION_APP_KEY'
+          value: listKeys('${resourceId('Microsoft.Web/sites', functionAppName)}/host/default', '2018-11-01').functionKeys.default
+        } 
       ]
     }
     httpsOnly: true
@@ -547,4 +553,3 @@ resource streamlitWebApp 'Microsoft.Web/sites@2022-03-01' = {
   kind: 'app,linux'
   tags: commonTags
 }
-
