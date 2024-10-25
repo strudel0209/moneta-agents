@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Set page config
 st.set_page_config(
-    page_title="Moneta - Agentic Assistant for FSI",
+    page_title="Moneta - Agentic Assistant for Insurance",
     initial_sidebar_state="expanded",
     layout="wide"
 )
@@ -28,12 +28,9 @@ DISABLE_LOGIN = os.getenv('DISABLE_LOGIN')
 FUNCTION_APP_KEY = os.getenv('FUNCTION_APP_KEY')
 
 
-# Pre-defined questions for insurance
-INS_PREDEFINED_QUESTIONS = [
-    "Provide information about my client John Doe",
-    "Can he travel to Bali with his current coverage?",
-    "Which number a client should call to report a claim from abroad?",
-    "Do we cover COVID-19 treatements in Indonesia?"
+# Pre-defined questions
+PREDEFINED_QUESTIONS = [
+    "Provide information about my client John Doe"
 ]
 
 INS_AGENTS = {
@@ -41,12 +38,6 @@ INS_AGENTS = {
     'CRM': {'emoji': '👥', 'color': '#17a2b8'},
     'Product': {'emoji': '🔍', 'color': '#ffc107'}
 }
-
-# Pre-defined questions for banking
-BANK_PREDEFINED_QUESTIONS = [
-    "Provide me a summary in a table of the sector exposure of the portfolio's positions of my client Pete Mitchell",
-    "Can you tell me top 3 news in general from the market today?"
-]
 
 BANK_AGENTS = {
     'Planner': {'emoji': '📅', 'color': '#28a745'},    # Green for planning
@@ -188,11 +179,7 @@ def fetch_conversations():
         "load_history": True,
         "use_case" : st.session_state.use_case  # Use selected use case
     }
-    response = requests.post(f'{BACKEND_URL}/api/http_trigger?code={FUNCTION_APP_KEY}', json=payload)
-    logging.info(f"Response: {response}")
-    logging.info(f"Backend URL: {BACKEND_URL}")
-    logging.info(f"Function App Key: {FUNCTION_APP_KEY}")   
-    return response.json()
+
     try:
         response = requests.post(f'{BACKEND_URL}/api/http_trigger?code={FUNCTION_APP_KEY}', json=payload)
         return response.json()
@@ -338,12 +325,8 @@ def display_chat():
         st.write("Please start a new conversation or select an existing one from the sidebar.")
         return
 
-    question_options = []
     # Dropdown for pre-defined questions
-    if st.session_state.use_case == 'fsi_insurance':
-        question_options = ["Select a predefined question or type your own below"] + INS_PREDEFINED_QUESTIONS
-    else:
-        question_options = ["Select a predefined question or type your own below"] + BANK_PREDEFINED_QUESTIONS    
+    question_options = ["Select a predefined question or type your own below"] + PREDEFINED_QUESTIONS
     selected_question = st.selectbox("", question_options, key="question_selectbox")
                                      
     conversation_dict = st.session_state.conversations[st.session_state.current_conversation_index]

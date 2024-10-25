@@ -1,5 +1,5 @@
 var functionAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-backend:v1.1.3.10' 
-var webappAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-frontend:v1.1.0'
+var webappAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-frontend:v1.1.2'
 
 @description('Name of the Resource Group')
 param resourceGroupName string = resourceGroup().name
@@ -359,7 +359,7 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
           value: AZURE_OPENAI_KEY
         }
         {
-          name: 'AZURE_OPENAI_DEPLOYMENT_NAME'
+          name: 'AZURE_OPENAI_MODEL'
           value: AZURE_OPENAI_DEPLOYMENT_NAME
         }
         {
@@ -484,7 +484,7 @@ resource cosmosDbDataContributorRoleAssignment 'Microsoft.DocumentDB/databaseAcc
 param appServicePlanName string = '${namePrefix}-plan'
 
 @description('Name of the Web App for Streamlit')
-param webAppName string = '${namePrefix}-agents'
+param webAppName string = '${namePrefix}-app'
 
 // Streamlit App Service Plan
 resource streamlitServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
