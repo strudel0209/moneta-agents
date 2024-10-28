@@ -334,8 +334,13 @@ def display_chat():
         st.write("Please start a new conversation or select an existing one from the sidebar.")
         return
 
+    question_options = []
     # Dropdown for pre-defined questions
-    question_options = ["Select a predefined question or type your own below"] + PREDEFINED_QUESTIONS
+    if st.session_state.use_case == 'fsi_insurance':
+        question_options = ["Select a predefined question or type your own below"] + INS_PREDEFINED_QUESTIONS
+    else:
+        question_options = ["Select a predefined question or type your own below"] + BANK_PREDEFINED_QUESTIONS   
+   
     selected_question = st.selectbox("", question_options, key="question_selectbox")
                                      
     conversation_dict = st.session_state.conversations[st.session_state.current_conversation_index]
@@ -369,10 +374,10 @@ def display_chat():
                             """,
                             unsafe_allow_html=True
                         )
-                else:
+                # else:
                     # Handle the case where the agent is not in AGENTS
-                    with st.chat_message(message['role']):
-                        st.write(f"{agent_name}: {message['content']}")
+                    # with st.chat_message(message['role']):
+                        # st.write(f"{agent_name}: {message['content']}")
 
     # Custom input field
     user_input = st.chat_input("Ask Moneta anything...")

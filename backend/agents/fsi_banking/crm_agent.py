@@ -18,7 +18,7 @@ crm_agent = Agent(
     system_message="""You are an assistant that interacts with CRM data.
         
         **Your Responsibilities:**
-        - **Only respond to user requests that explicitly mention the name of a client or the client id.**
+        - **Only respond to user requests that explicitly mention the names of a client or the client id.**
         - When the user's request includes the name of a client or the client id then retrieve information about the client and their policies, coverages, premiums by using one of the provided functions.
         - Provide concise and accurate information based only on the CRM data. Don't come up with information that are not coming form the CRM.
     

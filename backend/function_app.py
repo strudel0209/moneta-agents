@@ -137,14 +137,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # See https://microsoft.github.io/autogen/docs/topics/groupchat/resuming_groupchat
     #select use case group chat
     if 'fsi_insurance' == usecase_type:
-        team = create_group_chat_insurance()
+        team = create_group_chat_insurance(user_message)
     elif 'fsi_banking' == usecase_type:
-        # user_json =  {
-        #             "role": "user",
-        #             "name": "user",
-        #             "content": user_message
-        # }
-        # team = create_group_chat_banking({**conversation_history.to_dict(), **user_json } )
         team = create_group_chat_banking(user_message)
     
     history_count = len(conversation_history.messages)
