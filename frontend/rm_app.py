@@ -51,8 +51,8 @@ BANK_PREDEFINED_QUESTIONS = [
 BANK_AGENTS = {
     'Planner': {'emoji': '📅', 'color': '#28a745'},    # Green for planning
     'CRM': {'emoji': '👥', 'color': '#17a2b8'},        # Blue for customer relations
-    'Funds': {'emoji': '💰', 'color': '#ffc107'},      # Gold for money and funds
-    'CIO': {'emoji': '📈', 'color': '#007bff'},        # Blue for investment growth
+    'Funds': {'emoji': '💰', 'color': '#007bff'},      # Gold for money and funds
+    'CIO': {'emoji': '📈', 'color': '#ffc107'},        # Blue for investment growth
     'News': {'emoji': '📰', 'color': '#6c757d'},       # Gray for news and updates
 }
 
@@ -67,10 +67,9 @@ st.markdown("""
         font-size:20px !important;
     }
     .stButton>button {
-        color: #4F8BF9;
-        border-radius: 20px;
+        border-radius: 10px;
         height: 3em;
-        width: 100%;
+        width: auto;
     }
     .stTextInput>div>div>input {
         color: #4F8BF9;
@@ -212,17 +211,18 @@ def select_conversation(index):
 
 def display_sidebar():
     with st.sidebar:
-        # First item: dropdown to select use case
+        st.title("Moneta Assistant")
+        st.write("Empowering Advisors with AI")
+        st.write(f"Welcome, {st.session_state.display_name}!")
+
         use_case_options = ['fsi_insurance', 'fsi_banking']
         selected_use_case = st.selectbox('Select Use Case', use_case_options, index=use_case_options.index(st.session_state.use_case), key='use_case_selectbox')
         if selected_use_case != st.session_state.use_case:
             st.session_state.use_case = selected_use_case
-            # Initialize AGENTS based on use_case
             if st.session_state.use_case == 'fsi_insurance':
                 st.session_state.AGENTS = INS_AGENTS
             else:
                 st.session_state.AGENTS = BANK_AGENTS
-            # Clear conversations when use case changes
             st.session_state.conversations = fetch_conversations()
             st.session_state.current_conversation_index = None
 
@@ -232,66 +232,93 @@ def display_sidebar():
         else:
             st.session_state.AGENTS = BANK_AGENTS
 
-        st.title("Moneta Assistant")
-        st.write("Empowering Advisors with AI")
+        # Agents Display styles
+        st.markdown("""
+            <style>
+            .agent-list {
+                margin: 10px 0;
+                padding: 0;
+            }
+            .agent-item {
+                display: flex;
+                align-items: center;
+                padding: 8px 0;
+                border-bottom: 1px solid rgba(250, 250, 250, 0.1);
+            }
+            .agent-emoji {
+                font-size: 20px;
+                margin-right: 10px;
+                width: 30px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+            }
+            .agent-name {
+                flex-grow: 1;
+                font-size: 16px;
+            }
+            .agent-status {
+                color: #4CAF50;
+                font-size: 14px;
+            }
+            
+            /* Conversation button styles */
+            .stButton>button {
+                height: auto !important;
+                text-align: left !important;
+            }
+            .conversation-title {
+                font-weight: 500;
+            }
+            .conversation-meta {
+                font-size: 12px;
+                color: rgba(255, 255, 255, 0.6);
+            }
+            </style>
+        """, unsafe_allow_html=True)
         
-        ## Show online agents       
-        st.markdown("<h4 style='text-align: left;'>Agents Online:</h4>", unsafe_allow_html=True)
-        
-        agents = list(st.session_state.AGENTS.items())
-        agents_per_row = 3  # Maximum number of agents per line
-
-        # Split the agents into batches of agents_per_row
-        for i in range(0, len(agents), agents_per_row):
-            batch = agents[i:i+agents_per_row]
-            cols = st.columns(len(batch))
-            for col, (agent, details) in zip(cols, batch):
-                with col:
-                    st.markdown(
-                        f"""
-                        <div class="agent-indicator">
-                            <div class="agent-circle" style="background-color: {details['color']};">
-                                {details['emoji']}
-                            </div>
-                            <div class="agent-name">
-                                {agent}<span class="checkmark">✓</span>
-                            </div>
+        st.markdown("<h4 style='margin-bottom: 0px;'>Agents Online:</h4>", unsafe_allow_html=True)
+        # Display agents
+        agents_container = st.container()
+        with agents_container:
+            for agent_name, details in st.session_state.AGENTS.items():
+                st.markdown(f"""
+                    <div class="agent-item">
+                        <div class="agent-emoji" style="background-color: {details['color']};">
+                            {details['emoji']}
                         </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                        <div class="agent-name">
+                            {agent_name} Agent
+                        </div>
+                        <div class="agent-status">
+                            ● Online
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
 
-        st.write("---")
-        st.write(f"Welcome, {st.session_state.display_name}!")
-
-        if st.button("Start New Conversation", key="new_conv_button"):
+        st.write("")
+        # New Conversation Button
+        if st.button("✨ New Conversation ✨", key="new_conv_button", use_container_width=True):
             start_new_conversation()
-        st.write("---")
 
+        # Simplified Conversation History
+        st.markdown("<h4 style='margin: 0px 0 0px 0;'>Recent Conversations:</h4>", unsafe_allow_html=True)
+        
         for idx, conv_dict in enumerate(st.session_state.conversations):
             messages = conv_dict.get('messages', [])
+            first_user_message = next((msg['content'] for msg in messages if msg['role'] == 'user'), "New Conversation")
+            title = (first_user_message[:43] + '...') if len(first_user_message) > 43 else first_user_message
+            message_count = len(messages)
             
-            # Get the first user message
-            first_user_message = next((msg['content'] for msg in messages if msg['role'] == 'user'), "No messages yet")
-            
-            # Create a truncated version for the title
-            title = (first_user_message[:30] + '...') if len(first_user_message) > 30 else first_user_message
-            
-            with st.expander(f"{title}"):
-                # Display the full first message
-                st.write(f"{first_user_message}")
-                
-                # Display the number of messages
-                st.write(f"Number of messages: {len(messages)}")
-                
-                # Button to select this conversation
-                if st.button("Open this conversation", key=f'open_conv_{idx}'):
-                    select_conversation(idx)
+            button_text = f"{title}\n\n({message_count-1} messages)"
+            if st.button(button_text, key=f'conv_{idx}', use_container_width=True):
+                select_conversation(idx)
 
         st.write("---")
-        if st.button("Logout"):
+        if st.button("🚪 Logout", use_container_width=True):
             logout()
-
 
 def display_online_agents():
     st.markdown(
@@ -334,79 +361,110 @@ def display_chat():
         st.write("Please start a new conversation or select an existing one from the sidebar.")
         return
 
-    # Dropdown for pre-defined questions
-    question_options = ["Select a predefined question or type your own below"] + PREDEFINED_QUESTIONS
-    selected_question = st.selectbox("", question_options, key="question_selectbox")
-                                     
+    # Get the current conversation
     conversation_dict = st.session_state.conversations[st.session_state.current_conversation_index]
-    messages = conversation_dict.get('messages', [])
+    if 'messages' not in conversation_dict:
+        conversation_dict['messages'] = []
+    
+    messages = conversation_dict['messages']
 
+    # Display predefined questions based on use case
+    predefined_questions = BANK_PREDEFINED_QUESTIONS if st.session_state.use_case == 'fsi_banking' else INS_PREDEFINED_QUESTIONS
+    question_options = ["Select a predefined question or type your own below"] + predefined_questions
+    selected_question = st.selectbox("", question_options, key="question_selectbox")
+
+    # Handle predefined question selection
     if selected_question != "Select a predefined question or type your own below":
         if 'last_selected_question' not in st.session_state or st.session_state.last_selected_question != selected_question:
             st.session_state.last_selected_question = selected_question
             messages.append({'role': 'user', 'content': selected_question})
             with st.spinner('Moneta agents are collaborating to find the best answer...'):
-                assistant_response = send_message_to_backend(selected_question, conversation_dict)
-                messages.append(assistant_response)
+                assistant_responses = send_message_to_backend(selected_question, conversation_dict)
+                if isinstance(assistant_responses, list):
+                    messages.extend(assistant_responses)
+                else:
+                    messages.append(assistant_responses)
             st.rerun()
 
+    # Display message history
     for message in messages:
+        # Skip messages with empty content
+        if not message.get('content'):
+            continue
+            
         if message['role'] == 'user':
             with st.chat_message(message['role']):
                 st.write(message['content'])
         else:
-            if 'name' in message:
-                agent_name = message.get('name', '')
-                agent_info = st.session_state.AGENTS.get(agent_name)
-                if agent_info:
-                    with st.chat_message(message['role'], avatar=agent_info['emoji']):
-                        st.markdown(
-                            f"""
-                            <div style='border-left: 5px solid {agent_info['color']}; padding-left: 10px;'>
-                                <strong>{agent_name} Agent:</strong> 
-                                <div>{message['content']}</div>
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
-                else:
-                    # Handle the case where the agent is not in AGENTS
-                    with st.chat_message(message['role']):
-                        st.write(f"{agent_name}: {message['content']}")
+            agent_name = message.get('name', '')
+            agent_info = st.session_state.AGENTS.get(agent_name)
+            if agent_info:
+                with st.chat_message(message['role'], avatar=agent_info['emoji']):
+                    st.markdown(
+                        f"""
+                        <div style='border-left: 5px solid {agent_info['color']}; padding-left: 10px;'>
+                            <strong>{agent_name} Agent:</strong> 
+                            <div>{message['content']}</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+            else:
+                with st.chat_message(message['role']):
+                    st.write(f"{message['content']}")
 
-    # Custom input field
+    # Handle user input
     user_input = st.chat_input("Ask Moneta anything...")
     if user_input:
         messages.append({'role': 'user', 'content': user_input})
         with st.spinner('Moneta agents are collaborating to find the best answer...'):
-            assistant_response = send_message_to_backend(user_input, conversation_dict)
-            messages.append(assistant_response)
+            assistant_responses = send_message_to_backend(user_input, conversation_dict)
+            if isinstance(assistant_responses, list):
+                messages.extend(assistant_responses)
+            else:
+                messages.append(assistant_responses)
         st.rerun()
 
 def send_message_to_backend(user_input, conversation_dict):
     payload = {
         "user_id": st.session_state.user_id,
         "message": user_input,
-        "use_case" : st.session_state.use_case  # Use selected use case
+        "use_case": st.session_state.use_case
     }
     if conversation_dict.get('name') != 'New Conversation':
         payload["chat_id"] = conversation_dict.get('name')
 
     try:
-        # Include the FUNCTION_APP_KEY as a query parameter
         url = f'{BACKEND_URL}/api/http_trigger?code={FUNCTION_APP_KEY}'
         response = requests.post(url, json=payload)
         assistant_response = response.json()
         st.session_state.conversations[st.session_state.current_conversation_index]['name'] = assistant_response['chat_id']
+        
+        # Extract all assistant messages from the reply and filter out empty messages
         reply = assistant_response.get('reply', [])
-        for message in reply:
-            if message['role'] == 'assistant':
-                return message
+        assistant_messages = [
+            message for message in reply 
+            if message['role'] == 'assistant' and message.get('content')
+        ]
+        
+        # If no valid assistant messages found, return a default message
+        if not assistant_messages:
+            return {"role": "assistant", "name": "Planner", "content": "Sorry, I cannot help you with that."}
+        
+        # Return all non-empty assistant messages
+        return assistant_messages
 
-        return {"role": "assistant", "name": "Planner", "content": "Sorry, I cannot help you with that."}
     except requests.exceptions.RequestException as e:
         st.error(f"Error: {e}")
-        return {"reply": [{"role": "assistant", "name": "Planner", "content": "Sorry, an error occurred while processing your request."}]}
+        return {"role": "assistant", "name": "Planner", "content": "Sorry, an error occurred while processing your request."}
+
+def start_new_conversation():
+    st.session_state.conversations.append({
+        'messages': [],
+        'name': 'New Conversation'
+    })
+    st.session_state.current_conversation_index = len(st.session_state.conversations) - 1
+    st.session_state.last_selected_question = None
 
 def main():
     if not st.session_state.authenticated:
