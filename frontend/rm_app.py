@@ -4,7 +4,14 @@ import logging
 import os
 from dotenv import load_dotenv
 from msal import PublicClientApplication
-
+from config import (
+    INS_AGENTS, 
+    BANK_AGENTS, 
+    INS_PREDEFINED_QUESTIONS, 
+    BANK_PREDEFINED_QUESTIONS,
+    AGENT_STYLES,
+    GENERAL_STYLES
+)
 # Load environment variables
 load_dotenv()
 
@@ -28,35 +35,7 @@ DISABLE_LOGIN = os.getenv('DISABLE_LOGIN')
 FUNCTION_APP_KEY = os.getenv('FUNCTION_APP_KEY')
 
 
-# Pre-defined questions for insurance
-INS_PREDEFINED_QUESTIONS = [
-    "Provide information about my client John Doe",
-    "Can he travel to Bali with his current coverage?",
-    "Which number a client should call to report a claim from abroad?",
-    "Do we cover COVID-19 treatements in Indonesia?"
-]
 
-INS_AGENTS = {
-    'Planner': {'emoji': '📅', 'color': '#28a745'},
-    'CRM': {'emoji': '👥', 'color': '#17a2b8'},
-    'Product': {'emoji': '🔍', 'color': '#ffc107'}
-}
-
-# Pre-defined questions for banking
-BANK_PREDEFINED_QUESTIONS = [
-    "Provide me a summary in a table of the sector exposure of the portfolio's positions of my client id 123456",
-    "What are our CIO in-house view about Currencies and commodities?"
-]
-
-BANK_AGENTS = {
-    'Planner': {'emoji': '📅', 'color': '#28a745'},    # Green for planning
-    'CRM': {'emoji': '👥', 'color': '#17a2b8'},        # Blue for customer relations
-    'Funds': {'emoji': '💰', 'color': '#007bff'},      # Gold for money and funds
-    'CIO': {'emoji': '📈', 'color': '#ffc107'},        # Blue for investment growth
-    'News': {'emoji': '📰', 'color': '#6c757d'},       # Gray for news and updates
-}
-
-# Updated Custom CSS
 st.markdown("""
     <style>
     .big-font {
@@ -232,55 +211,11 @@ def display_sidebar():
         else:
             st.session_state.AGENTS = BANK_AGENTS
 
-        # Agents Display styles
-        st.markdown("""
-            <style>
-            .agent-list {
-                margin: 10px 0;
-                padding: 0;
-            }
-            .agent-item {
-                display: flex;
-                align-items: center;
-                padding: 8px 0;
-                border-bottom: 1px solid rgba(250, 250, 250, 0.1);
-            }
-            .agent-emoji {
-                font-size: 20px;
-                margin-right: 10px;
-                width: 30px;
-                height: 30px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-            }
-            .agent-name {
-                flex-grow: 1;
-                font-size: 16px;
-            }
-            .agent-status {
-                color: #4CAF50;
-                font-size: 14px;
-            }
-            
-            /* Conversation button styles */
-            .stButton>button {
-                height: auto !important;
-                text-align: left !important;
-            }
-            .conversation-title {
-                font-weight: 500;
-            }
-            .conversation-meta {
-                font-size: 12px;
-                color: rgba(255, 255, 255, 0.6);
-            }
-            </style>
-        """, unsafe_allow_html=True)
+        # Apply styles
+        st.markdown(AGENT_STYLES, unsafe_allow_html=True)
         
         st.markdown("<h4 style='margin-bottom: 0px;'>Agents Online:</h4>", unsafe_allow_html=True)
-        # Display agents
+        # Display agents with tooltips
         agents_container = st.container()
         with agents_container:
             for agent_name, details in st.session_state.AGENTS.items():
@@ -294,6 +229,9 @@ def display_sidebar():
                         </div>
                         <div class="agent-status">
                             ● Online
+                        </div>
+                        <div class="agent-tooltip">
+                            {details['description']}
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
@@ -467,6 +405,9 @@ def start_new_conversation():
     st.session_state.last_selected_question = None
 
 def main():
+    # Apply general styles
+    st.markdown(GENERAL_STYLES, unsafe_allow_html=True)
+    
     if not st.session_state.authenticated:
         login()
     else:
