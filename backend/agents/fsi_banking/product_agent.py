@@ -18,16 +18,18 @@ product_agent = Agent(
 
         **Your Responsibilities:**
         - **Handle all user requests that do NOT include a client's name.**
-        - Provide information about investments funds and ETFs offered by Bank Moneta by using the provided function: 'search_product'.
+        - Provide information about investments funds and ETFs by using the provided function: 'search_product'.
         - Offer clear and helpful answers to the user's inquiries. Don't use your general knowledge to respond but only the provided function.
         - If you are unsure ask the planner agent to clarify the user inquiry.
         
     """,  
     llm=llm,  
     description="""Call this Agent if:
-        - You need to retrieve generic funds or ETF information or conditions or other offering related information of Bank Moneta.
+        - You need to retrieve generic funds or ETF information or conditions or other details about investments offering.
         DO NOT CALL THIS AGENT IF:  
-        - You need to search for specific client's data identified by a client name in the request""",
+        - You need to search for specific client's data identified by a client name in the request
+        - You need to search for news or articles
+        - You need to search for in-house views or reccomandations about investement strategies""",
     )  
 
 

@@ -144,7 +144,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     history_count = len(conversation_history.messages)
      
     workflow = Workflow(askable=team, conversation=conversation_history)
-    workflow.run(user_message)
+    run_result = workflow.run(user_message)
+
+    if "error" in run_result:
+        return func.HttpResponse(
+            json.dumps({"error": run_result}),
+            status_code=400,
+            mimetype="application/json"
+        )
     
     previous_history = user_data['chat_histories'].get(chat_id)
     #logging.info(f"\nPrevious history = user_data['chat_histories'][chat_id]: {previous_history}\n")

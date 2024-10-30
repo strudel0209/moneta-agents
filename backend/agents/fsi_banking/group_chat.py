@@ -1,6 +1,7 @@
 from typing import Dict, List, Tuple
 from genai_vanilla_agents.team import Team
 from genai_vanilla_agents.planned_team import PlannedTeam
+from genai_vanilla_agents.conversation import Conversation, SummarizeMessagesStrategy
 from agents.fsi_banking.user_proxy_agent import user_proxy_agent
 from agents.fsi_banking.crm_agent import crm_agent
 from agents.fsi_banking.product_agent import product_agent
@@ -37,13 +38,17 @@ def create_group_chat_banking(original_inquiry):
         """
     
     if 'single' == strategy:
+
+        summarize_system_prompt = """Summarize the conversation so far."""
+
         team = Team(
             id="group_chat",
             description="A group chat with multiple agents",
             members=[user_proxy_agent, planner_agent, crm_agent, product_agent, cio_agent, news_agent],
             llm=llm, 
             stop_callback=lambda msgs: msgs[-1].get("content", "").strip().lower() == "terminate",
-            system_prompt=system_message_manager
+            system_prompt=system_message_manager,
+            #reading_strategy=SummarizeMessagesStrategy(llm, summarize_system_prompt)
         )
     else:
         team = PlannedTeam(

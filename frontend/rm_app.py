@@ -123,7 +123,7 @@ def login():
         with col2:
             st.markdown('<p class="big-font">Welcome to Moneta</p>', unsafe_allow_html=True)
             st.markdown('<p class="medium-font">Your Agentic Assistant for Insurance and Banking</p>', unsafe_allow_html=True)
-            st.image('moneta_banner.webp')
+            st.image('moneta_banner_v2.webp', width=600)
             st.write("Moneta is an AI-powered assistant designed to empower insurance advisors. "
                      "Log in to access personalized insights, streamline your workflow, and enhance your client interactions.")
             if st.button("Log in with Microsoft", key="login_button"):

@@ -2,7 +2,7 @@
 INS_PREDEFINED_QUESTIONS = [
     "Provide information about my client John Doe",
     "Can he travel to Bali with his current coverage?",
-    "Which number a client should call to report a claim from abroad?",
+    "Which phone number a client should use to report a claim while abroad?",
     "Do we cover COVID-19 treatements in Indonesia?"
 ]
 
@@ -26,8 +26,11 @@ INS_AGENTS = {
 
 # Banking Configuration
 BANK_PREDEFINED_QUESTIONS = [
-    "Provide me a summary in a table of the sector exposure of the portfolio's positions of my client id 123456",
-    "What are our CIO in-house view about Currencies and commodities?"
+    "Provide me a summary of the portfolio's positions of my client id 123456",
+    "What is our in-house view from our CIO about Growth investing?",
+    "List 3 Funds or ETFs we are offering for growth focused strategies",
+    "Craft a rebalance proposal for the client Pete Mitchell increasing the weight of investments in tech stocks absed on our offering"
+
 ]
 
 BANK_AGENTS = {

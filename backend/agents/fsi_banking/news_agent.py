@@ -22,7 +22,7 @@ news_agent = Agent(
     """,  
     llm=llm,  
     description="""Call this Agent if:
-        - You need to search for investement's news or articles from the web specifi to portfolio positions.
+        - You need to search for investement's news or articles from the web relevant to specific portfolio positions.
         DO NOT CALL THIS AGENT IF:  
         - You need to fetch generic investments answers or retrieve client specific data""",  
 )  
