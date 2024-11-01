@@ -45,7 +45,7 @@ def search(query: str):
                 {
                 "kind": "text",
                 "text": query,
-                "fields": "contentVector"
+                "fields": os.getenv('AI_SEARCH_VECTOR_FIELD_NAME',"contentVector")
                 }
             ],
             "queryType": "semantic",

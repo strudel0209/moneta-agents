@@ -1,5 +1,5 @@
-var functionAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-backend:v1.1.3.10' 
-var webappAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-frontend:v1.1.2'
+var functionAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-backend:v1.1.4' 
+var webappAppDockerImage = 'DOCKER|moneta.azurecr.io/moneta-ai-frontend:v1.1.3'
 
 @description('Name of the Resource Group')
 param resourceGroupName string = resourceGroup().name
@@ -63,6 +63,7 @@ var aiSearchFundsIndexName = 'funds-index'
 var aiSearchFundsSemanticConfiguration = 'funds-semantic-config'
 var aiSearchInsIndexName = 'ins-index'
 var aiSearchInsSemanticConfiguration = 'ins-semantic-config'
+var aiSearchVectorFieldName = 'contentVector'
 
 // Define common tags  
 var commonTags = {  
@@ -398,6 +399,10 @@ resource functionApp 'Microsoft.Web/sites@2022-03-01' = {
           name: 'AI_SEARCH_INS_SEMANTIC_CONFIGURATION'
           value: aiSearchInsSemanticConfiguration
         }
+        {
+          name: 'AI_SEARCH_VECTOR_FIELD_NAME'
+          value: aiSearchVectorFieldName
+        }
       ]
     }
   }
@@ -484,7 +489,7 @@ resource cosmosDbDataContributorRoleAssignment 'Microsoft.DocumentDB/databaseAcc
 param appServicePlanName string = '${namePrefix}-plan'
 
 @description('Name of the Web App for Streamlit')
-param webAppName string = '${namePrefix}-app'
+param webAppName string = '${namePrefix}-agents'
 
 // Streamlit App Service Plan
 resource streamlitServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {

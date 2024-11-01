@@ -145,8 +145,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
      
     workflow = Workflow(askable=team, conversation=conversation_history)
     run_result = workflow.run(user_message)
-
-    if "error" in run_result:
+    logging.info(f"run_result = {run_result}")
+    
+    if "agent-error" == run_result:
         return func.HttpResponse(
             json.dumps({"error": run_result}),
             status_code=400,
