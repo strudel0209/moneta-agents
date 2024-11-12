@@ -76,6 +76,7 @@ For enabling auth you need to have an app registration:
 AZ_REG_APP_CLIENT_ID=<Your Azure Registered App Client ID>
 AZ_TENANT_ID=<Your Azure Tenant ID>
 WEB_REDIRECT_URI=<Your Redirect URI>
+```
 
 - adjust your docker container names / registries in frontend/deploy_frontend_acr.sh 
 - chmod u+x frontend/deploy_frontend_acr.sh 
