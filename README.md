@@ -37,20 +37,22 @@ The agentic framework used behind is the:
 - `News`: RSS online feed search on stock news
 
 ## Project structure
--backend 
---agents 
----fsi_banking #agents files 
----fsi_insurance #agents files 
--function_app.py 
+- backend
+  - agents
+    - fsi_banking # agents files
+    - fsi_insurance # agents files
+  - function_app.py
 
--frontend 
--rm_app.py #streamlit app 
- 
--infra 
---bicep file 
+- frontend
+  - rm_app.py # streamlit app
+
+- infra
+  - bicep file
+
 
 ### Azure deployment (automated)
 azd up
+
 
 ### Docker deployment (local) - backend
 
@@ -77,20 +79,27 @@ WEB_REDIRECT_URI=<Your Redirect URI>
 
 - adjust your docker container names / registries in frontend/deploy_frontend_acr.sh 
 - chmod u+x frontend/deploy_frontend_acr.sh 
--./backend/deploy_backend_acr.sh  
+-./frontend/deploy_frontend_acr.sh 
 
 ### Authorizing CosmosDB DB Role to your principal (local deployment)
 - get your MSFT principalId (from entra) 
 - modify the backend/cosmosdb_cli_role.sh with your principalId and cosmosdb account and resource group
 - run the shell script
 
-### Running the App
+### Running the App (local)
 
 Start the Streamlit application:
 
 ```bash
 cd frontend
 streamlit run rm_app.py
+```
+
+### Running the Backend Function App (local)
+
+```bash
+cd backend
+func host start
 ```
 
 ### Usage
