@@ -35,10 +35,32 @@ The agentic framework used behind is the:
 'CIO': vector search with AI Search on in house investements view and reccomandations 
 'News': RSS online feed search on stock news
 
-## Frontend (local deployment)
+## Project structure
+-backend 
+--agents 
+---fsi_banking #agents files 
+---fsi_insurance #agents files 
+-function_app.py 
 
-### Environment Variables
-Create a .env file following the env.sample in the project frontend directory and set the following environment variables:
+-frontend 
+-rm_app.py #streamlit app 
+ 
+-infra 
+--bicep file 
+
+### Azure deployment (automated)
+azd up
+
+### Docker deployment (local) - backend
+
+- create a .env file following the backend/.env.sample
+- adjust your docker container names / registries in backend/deploy_backend_acr.sh 
+- chmod u+x backend/deploy_backend_acr.sh 
+-./backend/deploy_backend_acr.sh  
+
+### Docker deployment (local) - frontend
+
+- create a .env file following the env.sample in the project frontend directory and set the following environment variables: 
 
 Mandatory vars, use Disable login = True for local dev and to bypass msal auth
 DISABLE_LOGIN=<Set to 'True' to disable login>
@@ -48,6 +70,15 @@ for enabling auth you need to have an app registration:
 AZ_REG_APP_CLIENT_ID=<Your Azure Registered App Client ID>
 AZ_TENANT_ID=<Your Azure Tenant ID>
 WEB_REDIRECT_URI=<Your Redirect URI>
+
+- adjust your docker container names / registries in frontend/deploy_frontend_acr.sh 
+- chmod u+x frontend/deploy_frontend_acr.sh 
+-./backend/deploy_backend_acr.sh  
+
+### Authorizing CosmosDB DB Role to your principal (local deployment)
+- get your MSFT principalId (from entra) 
+- modify the backend/cosmosdb_cli_role.sh with your principalId and cosmosdb account and resource group
+- run the shell script
 
 ### Running the App
 Start the Streamlit application:

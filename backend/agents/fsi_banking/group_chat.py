@@ -47,7 +47,7 @@ def create_group_chat_banking(original_inquiry):
             members=[user_proxy_agent, planner_agent, crm_agent, product_agent, cio_agent, news_agent],
             llm=llm, 
             stop_callback=lambda msgs: msgs[-1].get("content", "").strip().lower() == "terminate",
-            system_prompt=system_message_manager,
+            #system_prompt=system_message_manager,
             #reading_strategy=SummarizeMessagesStrategy(llm, summarize_system_prompt)
         )
     else:

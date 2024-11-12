@@ -42,7 +42,7 @@ def create_group_chat_insurance(original_inquiry):
             members=[user_proxy_agent, planner_agent, crm_agent, product_agent],
             llm=llm, 
             stop_callback=lambda msgs: msgs[-1].get("content", "").strip().lower() == "terminate",
-            system_prompt=system_message_manager
+            #system_prompt=system_message_manager
         )
     else:
         team = PlannedTeam(
