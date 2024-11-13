@@ -24,7 +24,9 @@ news_agent = Agent(
     description="""Call this Agent if:
         - You need to search for investement's news or articles from the web relevant to specific portfolio positions.
         DO NOT CALL THIS AGENT IF:  
-        - You need to fetch generic investments answers or retrieve client specific data""",  
+        - You need to search for specific client's data identified by a client name or id in the request
+        - You need to search for investement offering or funds and etf information
+        - You need to search for in-house views or reccomandations about investement strategies""",
 )  
 
 

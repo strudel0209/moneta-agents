@@ -26,6 +26,8 @@ def create_group_chat_insurance(original_inquiry):
     logger.info(f"agent team strategy decision = {strategy}")
 
     team = None
+
+    #Not in use at it seems to "confuse" the planner
     system_message_manager="""
         You are the overall manager of the group chat. 
         You can see all the messages and intervene if necessary. 

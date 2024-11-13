@@ -27,7 +27,9 @@ crm_agent = Agent(
     description="""Call this Agent if:
         - You need to retrieve specific client's data identified by the name of a client in the user request or by a client id.
         DO NOT CALL THIS AGENT IF:  
-        - You need to fetch generic policies answers""",  
+        - You need to fetch generic investments answers about stock funds or etf
+        - You need to search for news or articles on the web
+        - You need to search for in-house views or reccomandations about investement strategies""", 
 )  
 
 key = DefaultAzureCredential()

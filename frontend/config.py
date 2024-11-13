@@ -27,8 +27,11 @@ INS_AGENTS = {
 # Banking Configuration
 BANK_PREDEFINED_QUESTIONS = [
     "Provide me a summary of the portfolio's positions of my client id 123456",
+    "What are our Chief Investment Office (CIO) believes on the AI sector?",
     "What is our in-house view from our CIO about Growth investing?",
+    "Show Pete Mitchell portfolio performance and suggest any rebalancing options based on recent CIO views.",
     "List 3 Funds or ETFs we are offering for growth focused strategies",
+    "Can you give me an update on the UBS 100 Index Switzerland Equity Fund CHF and its latest performance?",
     "Craft a rebalance proposal for the client Pete Mitchell increasing the weight of investments in tech stocks absed on our offering"
 
 ]

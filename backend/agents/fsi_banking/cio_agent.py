@@ -25,9 +25,11 @@ cio_agent = Agent(
     """,  
     llm=llm,  
     description="""Call this Agent if:
-        - You need to retrieve investement research and in-house view from Moneta Bank.
+        - You need to retrieve investement researches or in-house views or reccomandations about investing streategies.
         DO NOT CALL THIS AGENT IF:  
-        - You need to search for funds or etf product details or retrieve client's specific data or news from the web""",  
+        - You need to search for specific client's data identified by a client name or id in the request
+        - You need to fetch generic investments answers about stock funds or etf
+        - You need to search for news or articles on the web""",
 )  
 
 

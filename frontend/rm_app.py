@@ -179,12 +179,6 @@ def extract_assistant_messages(data):
     assistant_contents = [message.get('content') for message in reply if message.get('role') == 'assistant']
     return assistant_contents[0] if assistant_contents else 'Could not find any message...'
 
-def start_new_conversation():
-    st.session_state.conversations.append({
-        'messages': []
-    })
-    st.session_state.current_conversation_index = len(st.session_state.conversations) - 1
-
 def select_conversation(index):
     st.session_state.current_conversation_index = index
 
@@ -404,7 +398,7 @@ def start_new_conversation():
         'name': 'New Conversation'
     })
     st.session_state.current_conversation_index = len(st.session_state.conversations) - 1
-    st.session_state.last_selected_question = None
+    st.session_state.last_selected_question = "Select a predefined question or type your own below"
 
 def main():
     # Apply general styles
