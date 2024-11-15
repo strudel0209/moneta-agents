@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
-from queue import Queue
+from queue import SimpleQueue
 from typing import Any, Protocol
 
 from pydantic import BaseModel
 
 from .llm import LLM
-import json
+import logging
+logger = logging.getLogger(__name__)
 
 # a ConversationMetrics class with totalTokens, promptTokens and completionTokens
 class ConversationMetrics(BaseModel):
@@ -14,18 +15,23 @@ class ConversationMetrics(BaseModel):
     completion_tokens: int
 
 class Conversation():
-    def __init__(self, messages: list[dict] = [], variables: dict[str, str] = {}):
+    def __init__(self, messages: list[dict] = [], variables: dict[str, str] = {}, metrics = ConversationMetrics(total_tokens=0, prompt_tokens=0, completion_tokens=0), log = []):
         self.messages = messages
         self.variables = variables
-        self.metrics = ConversationMetrics(total_tokens=0, prompt_tokens=0, completion_tokens=0)
-        self.stream_queue = Queue()
+        self.log = log
+        self.metrics = metrics
+        self.stream_queue = SimpleQueue()
         
     def stream(self):
+        """
+        Stream conversation updates, like LLM delta updates, to the consumer
+        
+        NOTE this is an INFINITE generator function, and must be kept so. 
+        Consumers should break the loop themselves, typically using a stack count logic
+    """
         while True:
             mark, content = self.stream_queue.get()
             yield [mark, content]
-            if mark == "response":
-                break
         
     def update(self, delta):
         self.stream_queue.put_nowait(delta)
@@ -36,12 +42,17 @@ class Conversation():
             "variables": self.variables,
             "metrics": self.metrics.model_dump()
         }
-    
+        
+    def fork(self):
+        return Conversation(messages=self.messages.copy(), variables=self.variables.copy())
+        
     @classmethod
     def from_dict(cls, data):
         return cls(
-            messages=data.get('messages', []),
-            variables=data.get('variables', {})
+            messages = data.get('messages', []),
+            variables = data.get('variables', {}),
+            log = data.get('log', []),
+            metrics = ConversationMetrics(**data.get('metrics', {}))
         )
         
 class ConversationReadingStrategy(ABC):
@@ -80,8 +91,9 @@ class SummarizeMessagesStrategy(ConversationReadingStrategy):
         
     def get_messages(self, conversation: Conversation) -> list[dict]:
         # Extract the conversation text from the messages        
-        local_messages = [{"role": "system", "content": self.system_prompt}]
+        local_messages = []
         local_messages += self.exclude_system_messages(conversation.messages)
+        local_messages.append({"role": "user", "content": self.system_prompt})
         
         # Summarize the conversation text
         response, usage = self.llm.ask(messages=local_messages)
@@ -99,3 +111,28 @@ class PipelineConversationReadingStrategy(ConversationReadingStrategy):
         for strategy in self.strategies:
             messages = strategy.get_messages(Conversation(messages=messages))
         return messages
+    
+class ConversationUpdateStrategy(ABC):
+    @abstractmethod
+    def update(self, conversation: Conversation, delta: any):
+        pass
+    
+class AppendMessagesUpdateStrategy(ConversationUpdateStrategy):
+    def update(self, conversation: Conversation, delta: any):
+        if isinstance(delta, list):
+            conversation.messages += delta
+        else:
+            conversation.messages += [delta]
+        
+class ReplaceLastMessageUpdateStrategy(ConversationUpdateStrategy):
+    def update(self, conversation: Conversation, delta: any):
+        conversation.messages[-1] = delta
+
+class NoopUpdateStrategy(ConversationUpdateStrategy):
+    """
+    No operation update strategy, does not update the conversation.
+    
+    Useful for agents that do not need to update messages, but only invoke functions or set variables.
+    """
+    def update(self, conversation: Conversation, delta: any):
+        pass

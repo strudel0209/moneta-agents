@@ -1,6 +1,6 @@
 from collections import defaultdict
 from typing import Generator
-from openai import AzureOpenAI, Stream
+from openai import NOT_GIVEN, AzureOpenAI, Stream
 from openai.types.chat import ChatCompletion, ChatCompletionChunk
 from openai.types.completion import CompletionUsage
 from abc import ABC, abstractmethod
@@ -11,18 +11,48 @@ import logging
 logger = logging.getLogger(__name__)
 
 class LLM(ABC):
+    """
+    Abstract class for the Language Model clients
+    """
     def __init__(self, config: dict):
         self.config = config
         
     @abstractmethod
-    def ask(self, messages: list, tools: list = None, tools_function: dict[str, callable] = None, temperature: float = 0.7) -> tuple[dict, any]:
+    def ask(self, messages: list, tools: list = None, tools_function: dict[str, callable] = None, temperature: float = 0.7, response_format = None) -> tuple[dict, dict]:
         pass
     
     @abstractmethod
     def ask_stream(self, messages: list, tools: list = None, tools_function: dict[str, callable] = None, temperature: float = 0.7) -> Generator[tuple[str, any], None, tuple[dict, any]]:
         pass
 
+class ErrorTestingLLM(LLM):
+    """
+    LLM that raises an error when asked. Used for testing error handling.
+    """
+    def __init__(self, config: dict):
+        super().__init__(config)
+        
+    def ask(self, messages: list, tools: list = None, tools_function: dict[str, callable] = None, temperature: float = 0.7, response_format = None):
+        raise Exception("Fake error")
+        
+    def ask_stream(self, messages: list, tools: list = None, tools_function: dict[str, callable] = None, temperature: float = 0.7):
+        yield ["start", ""]
+        yield ["error", "Fake error"]
+        yield ["end", ""]
+        return None, None
+
 class AzureOpenAILLM(LLM):
+    """
+    LLM using Azure OpenAI API
+    
+    Args:
+    - config: dict with the following
+        - azure_deployment: str, Azure deployment name
+        - azure_endpoint: str, Azure endpoint
+        - api_key: str, Azure API key. Leave empty if using Azure AD token provider
+        - api_version: str, API version
+        
+    """
     def __init__(self, config: dict):
         super().__init__(config)
                 
@@ -38,16 +68,27 @@ class AzureOpenAILLM(LLM):
             azure_ad_token_provider=token_provider)
         logger.debug("LLM initialized with AzureOpenAI client with %s", "api_key" if api_key else "token provider")
         
-    def ask(self, messages: list, tools: list = None, tools_function: dict[str, callable] = None, temperature: float = 0.7):
+    def ask(self, messages: list, tools: list = None, tools_function: dict[str, callable] = None, temperature: float = 0.7, response_format = NOT_GIVEN):
         # logger.debug("Received messages: %s", messages)
         
-        response = self.client.chat.completions.create(
-            messages=messages,
-            model=self.config['azure_deployment'],
-            tools=tools, 
-            temperature=temperature,
-            tool_choice="auto" if tools else None
-        )
+        if response_format is NOT_GIVEN:
+            response = self.client.chat.completions.create(
+                messages=messages,
+                model=self.config['azure_deployment'],
+                tools=tools if tools and len(tools) > 0 else NOT_GIVEN, 
+                temperature=temperature,
+                tool_choice="auto" if tools else None,
+            )
+        else:
+            response = self.client.beta.chat.completions.parse(
+                messages=messages,
+                model=self.config['azure_deployment'],
+                tools=tools if tools and len(tools) > 0 else NOT_GIVEN, 
+                temperature=temperature,
+                tool_choice="auto" if tools else None,
+                response_format=response_format
+            )
+        
         
         response_message = response.choices[0].message
         logger.debug("Response message: %s", response_message)
@@ -97,6 +138,8 @@ class AzureOpenAILLM(LLM):
             "total_tokens": 0
         }
         
+        
+        yield ["start", ""]
         while True:
             response_message = {
                 "content": "",
@@ -123,7 +166,6 @@ class AzureOpenAILLM(LLM):
             )
             
             # Yield the intermediate updates
-            yield ["start", ""]
             for chunk in completion:
                 if len(chunk.choices) > 0:
                     delta = json.loads(chunk.choices[0].delta.model_dump_json())
@@ -137,7 +179,6 @@ class AzureOpenAILLM(LLM):
                     usage["completion_tokens"] += chunk.usage.completion_tokens
                     usage["prompt_tokens"] += chunk.usage.prompt_tokens
                     usage["total_tokens"] += chunk.usage.total_tokens
-            yield ["end", ""]
             
             logger.debug("Response message: %s", response_message)
             
@@ -156,6 +197,7 @@ class AzureOpenAILLM(LLM):
 
                 function_result = tools_function[tool_call["function"]["name"]](**function_args)
                 logger.debug("Function result: %s", function_result)
+                yield ["function_result", { "name": tool_call["function"]["name"], "result": function_result }]
 
                 messages.append({
                     "tool_call_id": tool_call["id"],
@@ -165,10 +207,16 @@ class AzureOpenAILLM(LLM):
                 })
             # NOTE: The loop will continue until there are no more tool calls
         
+        # Strip the tool calls from the final response message
+        response_message.pop("tool_calls", None)
+        response_message.pop("function_call", None)
+        
         logger.debug("Final response message: %s", response_message)
         
         # Return the final response message and usage
         yield ["response", [response_message, usage]]
+        
+        yield ["end", ""]
         
         return [response_message, usage]
 

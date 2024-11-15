@@ -1,9 +1,9 @@
 from abc import abstractmethod
-import asyncio
 import contextlib
 import gzip
 import json
 import logging
+import queue
 import time
 from typing import Generator, Protocol
 
@@ -20,7 +20,6 @@ from ..askable import Askable
 
 # Configure logging
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 class ConversationRequest(BaseModel):
     messages: list[dict]
@@ -171,7 +170,7 @@ class RESTHost(AskableHost):
         self.app.add_middleware(GZipRequestMiddleware)
         
         @self.app.post("/{id}/describe")
-        def describe(id: str):
+        async def describe(id: str):
             if id in self.askables_dict:
                 askable = self.askables_dict[id]
                 return {"id": askable.id, "description": askable.description}
@@ -188,20 +187,49 @@ class RESTHost(AskableHost):
                 askable = self.askables_dict[id]
                 
                 if stream:
-                    loop = asyncio.get_event_loop()
-                    res = loop.run_in_executor(None, askable.ask, conv, True)
+                    result_queue = queue.SimpleQueue()
+                    def ask_in_thread():
+                        res = None
+                        try:
+                            res = askable.ask(conv, True)
+                        except Exception as e:
+                            logger.error("Error during askable.ask: %s", e, exc_info=True)
+                            conv.update(["error", str(e)])
+                            res = "error"
+                        
+                        result_queue.put_nowait(res)
+                    
+                    thread = threading.Thread(target=ask_in_thread)
+                    thread.start()
                     async def _stream():
+                        # Since we are using an infinite generator, we need to keep track of the stack count to know when to break
+                        stack_count = 0
                         for mark, content in conv.stream():
                             json_string = json.dumps([mark, content])
-                            # logger.debug(f"Streaming: {json_string}")
-                            yield json_string + "\n" # NEW LINE DELIMITED JSON
-                            if mark == "response":
+                            
+                            # Always yield the update back to the client, as a JSON string
+                            yield json_string + "\n" # NEW LINE DELIMITED JSON, otherwise the client will not be able to read the stream
+                            
+                            # Keep track of the stack count to know when to break
+                            if mark == "start":
+                                stack_count += 1
+                            elif mark == "end":
+                                stack_count -= 1
+                                
+                            logger.debug("Stack count: %s", stack_count)            
+                            if stack_count == 0:
+                                logger.debug("Received response and stack count is 0, breaking stream.")
+                                break
+                            if mark == "error":
+                                logger.debug("Received error, breaking stream.")
                                 break
                         
+                        thread.join()
                         response = AskResponse(
                             conversation=ConversationResponse(messages=conv.messages, variables=conv.variables, metrics=conv.metrics), 
-                            result=await res).model_dump()
+                            result=result_queue.get()).model_dump()
                         yield json.dumps(["result", response])
+                        
                     response = StreamingResponse(_stream(), media_type="application/x-ndjson")
                 else:                    
                     result = askable.ask(conv, stream=False)
@@ -215,3 +243,26 @@ class RESTHost(AskableHost):
             else:
                 # Return 404 if the askable is not found
                 return {"detail": "Askable not found"}, 404
+            
+
+
+import importlib
+import os
+def find_askables(source_dir: str = None):
+    if source_dir is None:
+        source_dir = os.path.dirname(os.path.realpath(__file__))
+    askables = []
+    for filename in os.listdir(source_dir):
+        if filename.endswith("_entry.py") and filename != "main.py":
+            module_name = filename[:-3]
+            spec = importlib.util.spec_from_file_location(module_name, os.path.join(source_dir, filename))
+            module = importlib.util.module_from_spec(spec)
+            logger.debug(f"Loading module {module_name} from {os.path.join(source_dir, filename)}")
+            spec.loader.exec_module(module)
+            for name in dir(module):
+                logger.debug(f"Checking {name}")
+                obj = getattr(module, name)
+                if isinstance(obj, Askable):
+                    logger.debug(f"Found askable: {obj}")
+                    askables.append(obj)
+    return askables

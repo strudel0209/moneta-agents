@@ -1,4 +1,4 @@
-from .agent import Agent
+from genai_vanilla_agents.conversation import Conversation
 from .askable import Askable
 from .llm import LLM
 
@@ -6,6 +6,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Sequence(Askable):
+    """
+    A sequence of Askable steps that are ALWAYS asked in order.
+    """
     def __init__(self, llm: LLM, description: str, id: str, steps: list[Askable], system_prompt: str = ""):
         super().__init__(id, description)
         self.steps = steps
@@ -15,11 +18,13 @@ class Sequence(Askable):
         
         logger.debug("[Sequence %s] initialized with agents: %s", self.id, [step.id for step in self.steps])
 
-    def ask(self, messages: list[dict], stream = False):
+    def ask(self, conversation: Conversation, stream = False):
         
         execution_result = None
-        for step in self.steps:            
-            agent_result = step.ask(messages, stream=stream)
+        if stream:
+            conversation.update(["start", self.id])
+        for step in self.steps:
+            agent_result = step.ask(conversation, stream=stream)
             logger.debug("[Sequence %s] asked step '%s' with messages: %s", self.id, step.id, agent_result)
             
             if agent_result == "stop":
@@ -30,5 +35,8 @@ class Sequence(Askable):
                 logger.error("[Sequence %s] error signal received, ending workflow.", self.id)
                 execution_result = "agent-error"
                 break
+                
+        if stream:
+            conversation.update(["end", self.id])
             
         return execution_result

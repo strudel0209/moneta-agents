@@ -2,7 +2,7 @@ import logging
 from typing import Annotated, Callable, Optional
 import json
 
-from .conversation import AllMessagesStrategy, Conversation, ConversationReadingStrategy
+from .conversation import AllMessagesStrategy, AppendMessagesUpdateStrategy, Conversation, ConversationReadingStrategy, ConversationUpdateStrategy
 
 from .askable import Askable
 from .function_utils import get_function_schema, wrap_function, F
@@ -12,18 +12,39 @@ from .llm import LLM
 logger = logging.getLogger(__name__)
 
 class Agent(Askable):
+    """
+    An agent that can be asked to solve the user inquiry by using a language model.
+    
+    Args:
+        description (str): The description of the agent. Will be used by orchestrator to decide which agent to ask.
+        id (str): The unique identifier of the agent.
+        system_message (str): The system message to provide instructions to the LLM.
+        llm (LLM): The language model to use for the decision-making process.
+        reading_strategy (ConversationReadingStrategy): The reading strategy to use to select the messages to pass to the LLM.
+        update_strategy (ConversationUpdateStrategy): The update strategy to use to update the conversation with the response.
+    """
     def __init__(self, description: str, id: str, system_message: str, llm: LLM,
-                 reading_strategy: ConversationReadingStrategy = AllMessagesStrategy()):
+                 reading_strategy: ConversationReadingStrategy = AllMessagesStrategy(),
+                 update_strategy: ConversationUpdateStrategy = AppendMessagesUpdateStrategy()):
         super().__init__(id, description)
         self.tools = []
         self.tools_function = {}
         self.llm = llm
         self.system_message = system_message
         self.reading_strategy = reading_strategy
+        self.update_strategy = update_strategy
         
         logger.debug(f"Agent initialized with ID: {self.id}, Description: {self.description}")
 
     def ask(self, conversation: Conversation, stream = False):
+        """
+        Ask the agent to solve the user inquiry by using the language model.
+        
+        This method will prepare the messages to send to the LLM, call the LLM, and update the conversation with the response.
+        
+        Args:
+            conversation (Conversation): The conversation to use for the execution
+            stream (bool): Whether to stream the conversation updates."""
         logger.debug(f"[Agent ID: {self.id}] Received messages: %s", conversation.messages)
         
         local_messages = self._prepare_llm_input(conversation)
@@ -48,11 +69,12 @@ class Agent(Askable):
                 response_message = None
                 usage = None
                 for mark, content in gen:
+                    
                     if mark == "start" or mark == "end":
                         content = self.id
                     if mark == "response" and content is not None:
                         response_message, usage = content
-                    
+                        
                     conversation.update([mark, content])
             
             if usage is not None:
@@ -62,10 +84,11 @@ class Agent(Askable):
                 conversation.metrics.completion_tokens += usage["completion_tokens"]
         except Exception as e:
             logger.error(f"[Agent ID: {self.id}] Error during LLM call: %s", e)
+            conversation.log.append(("error", "agent/error", self.id, e))
             return "error"
         
         response_message['name'] = self.id
-        conversation.messages.append(response_message)
+        self.update_strategy.update(conversation, response_message)
         logger.debug(f"[Agent ID: {self.id}] Response message: %s", response_message)
         
         return "done"
@@ -97,7 +120,13 @@ class Agent(Askable):
         name: Optional[str] = None,
         description: Optional[str] = None,
     ) -> Callable[[F], F]:
-
+        """
+        Decorator for registering a function to be used by an agent as a tool. NOTE: remember to annotate the function with the types of the parameters and the return value.
+        
+        Args:
+            name (str): The name of the tool. If not provided, the function name will be used.
+            description (str): The description of the tool. If not provided, the function description will be used.
+        """
         def _decorator(func: F) -> F:
             """Decorator for registering a function to be used by an agent.
 

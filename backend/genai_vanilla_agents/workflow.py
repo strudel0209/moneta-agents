@@ -1,4 +1,5 @@
 import asyncio
+import queue
 import threading
 from typing import Union
 from .askable import Askable
@@ -69,25 +70,48 @@ class Workflow():
     def run_stream(self, workflow_input: Union[str, WorkflowInput]):
         self._handle_workflow_input(workflow_input)
         
+        result_queue = queue.Queue()
         def ask_in_thread():
             try:
-                return self.askable.ask(self.conversation, True)
+                res = self.askable.ask(self.conversation, stream=True)
             except Exception as e:
                 logger.error("Error during askable.ask: %s", e)
                 self.conversation.update(["error", e])
-                return None
+                res = "error"
+            
+            logger.debug("Workflow execution result in thread: %s", res)
+            result_queue.put_nowait(res)
         
         thread = threading.Thread(target=ask_in_thread)
         thread.start()
         
+        # In order to break the stream, we need to keep track of nesting levels, using a stack count
+        stack_count = 0
         for mark, content in self.conversation.stream():
+            # Always update the conversation with the stream content
+            logger.debug(f"Stream content: {mark}, {content}")
             yield [mark, content]
-            if mark == "response":
+            
+            # Keep track of the stack count to know when to break
+            if mark == "start":
+                stack_count += 1
+            elif mark == "end":
+                stack_count -= 1
+                
+            logger.debug("Stack count: %s", stack_count)            
+            if stack_count == 0:
+                logger.debug("Received response and stack count is 0, breaking stream.")
                 break
             if mark == "error":
+                logger.debug("Received error, breaking stream.")
                 break
         
+        logger.debug("Joining thread")
         thread.join()
+        result = result_queue.get()
+        logger.debug("Workflow execution result: %s", result)
+        
+        yield ["result", result]
     
     def restart(self):        
         self.conversation = Conversation(messages=[], variables={})

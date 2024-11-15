@@ -318,6 +318,7 @@ def display_chat():
                 else:
                     messages.append(assistant_responses)
             st.rerun()
+   
     # Display message history
     for message in messages:
         # Skip messages with empty content
@@ -342,10 +343,10 @@ def display_chat():
                             """,
                             unsafe_allow_html=True
                         )
-                # else:
+                else:
                     # Handle the case where the agent is not in AGENTS
-                    # with st.chat_message(message['role']):
-                        # st.write(f"{agent_name}: {message['content']}")
+                    with st.chat_message(message['role']):
+                        st.write(f"{agent_name}: {message['content']}")
 
     # Handle user input
     user_input = st.chat_input("Ask Moneta anything...")
@@ -399,6 +400,7 @@ def start_new_conversation():
     })
     st.session_state.current_conversation_index = len(st.session_state.conversations) - 1
     st.session_state.last_selected_question = "Select a predefined question or type your own below"
+
 
 def main():
     # Apply general styles

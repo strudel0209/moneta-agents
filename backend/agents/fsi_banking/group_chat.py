@@ -28,16 +28,6 @@ def create_group_chat_banking(original_inquiry):
     logger.info(f"agent team strategy decision = {strategy}")
 
     team = None
-
-    #Not in use as it seems to confuse the planner
-    system_message_manager="""
-        You are the overall manager of the group chat. 
-        You can see all the messages and intervene if necessary. 
-        You can also send system messages to the group chat. 
-        
-        If you need human or user input, you can ask advisor for more information.
-        NEVER call advisor immediately after Executor
-        """
     
     if 'single' == strategy:
 
@@ -59,5 +49,8 @@ def create_group_chat_banking(original_inquiry):
             members=[user_proxy_agent, planner_agent, crm_agent, product_agent, cio_agent, news_agent],
             llm=llm, 
             stop_callback=lambda msgs: len(msgs) > 12,    
+            fork_conversation=True,
+            fork_strategy=SummarizeMessagesStrategy(llm, "Summarize the conversation, focusing on the key points and decisions made."),
+            include_tools_descriptions=True
         )
     return team
