@@ -53,6 +53,11 @@ The agentic framework used behind is the:
 ### Azure deployment (automated)
 azd up
 
+### Data indexing 
+You can index your data located under the data folder by executing first the data_upload.py and then data_index.py.
+Each subfolder of the data folder will be a seperate index. 
+If you are using managed identity make sure to assign the following roles to the AI Search: Cognitive Service OpenAI user, Storage Blob Data Reader.
+Assign the following roles to the user (yourself): Cognitive Service OpenAI user, Storage Blob Data Contributor, Search Service Data Contributor and Search Service Contributor. 
 
 ### Docker deployment (local) - backend
 
