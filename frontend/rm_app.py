@@ -384,14 +384,14 @@ def send_message_to_backend(user_input, conversation_dict):
         
         # If no valid assistant messages found, return a default message
         if not assistant_messages:
-            return {"role": "assistant", "name": "Planner", "content": "Sorry, I cannot help you with that."}
+            return {"role": "assistant", "name": "System", "content": "Sorry, I cannot help you with that."}
         
         # Return all non-empty assistant messages
         return assistant_messages
 
     except requests.exceptions.RequestException as e:
         st.error(f"Error: {e}")
-        return {"role": "assistant", "name": "Planner", "content": "Sorry, an error occurred while processing your request."}
+        return {"role": "assistant", "name": "System", "content": "Sorry, an error occurred while processing your request."}
 
 def start_new_conversation():
     st.session_state.conversations.append({
@@ -401,6 +401,9 @@ def start_new_conversation():
     st.session_state.current_conversation_index = len(st.session_state.conversations) - 1
     st.session_state.last_selected_question = "Select a predefined question or type your own below"
 
+    # reset choice of dropdown
+    st.session_state['question_selectbox'] = 'Select a predefined question or type your own below'
+    
 
 def main():
     # Apply general styles
