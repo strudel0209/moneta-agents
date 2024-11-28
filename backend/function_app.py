@@ -149,7 +149,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
     if "agent-error" == run_result:
         return func.HttpResponse(
-            json.dumps({"error": run_result}),
+            json.dumps({"chat_id": chat_id, "reply": run_result}),
             status_code=400,
             mimetype="application/json"
         )

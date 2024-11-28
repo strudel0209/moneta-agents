@@ -7,11 +7,6 @@ INS_PREDEFINED_QUESTIONS = [
 ]
 
 INS_AGENTS = {
-    'Planner': {
-        'emoji': '📅', 
-        'color': '#28a745',
-        'description': 'Serves as the main orchestrator and conversational manager for interactions with human financial advisors. It\'s designed to professionally greet advisors, manage the flow of conversation, and ensure proper closure of interactions.'
-    },
     'CRM': {
         'emoji': '👥', 
         'color': '#17a2b8',
