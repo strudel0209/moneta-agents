@@ -11,12 +11,14 @@ services:
     host: containerapp
     docker:
       path: ./Dockerfile
+      remoteBuild: true
   backend:
     language: python
     project: src/backend
     host: containerapp
     docker:
       path: ./Dockerfile
+      remoteBuild: true
 hooks:
     preprovision:
       # windows:
