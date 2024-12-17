@@ -8,8 +8,23 @@
       "location": {
         "value": "${AZURE_LOCATION}"
       },
-      "principalId": {
+      "azurePrincipalId": {
         "value": "${AZURE_PRINCIPAL_ID}"
+      },
+      "frontendExists": {
+        "value": "${SERVICE_FRONTEND_RESOURCE_EXISTS=false}"
+      },
+      "backendExists": {
+        "value": "${SERVICE_BACKEND_RESOURCE_EXISTS=false}"
+      },
+      "authTenantId": {
+        "value": "${AZURE_AUTH_TENANT_ID}"
+      },
+      "authClientId": {
+        "value": "${AZURE_CLIENT_APP_ID}"
+      },
+      "authClientSecret": {
+        "value": "${AZURE_CLIENT_APP_SECRET}"
       }
     }
 }

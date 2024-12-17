@@ -1,9 +1,0 @@
-logs/
-.git
-*.md
-.cache
-.vscode/
-.env
-banking/
-local.settings.json
-_pycache_/

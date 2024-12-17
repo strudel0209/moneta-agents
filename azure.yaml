@@ -3,9 +3,51 @@
 # This is an example starter azure.yaml file containing several example services in comments below.
 # Make changes as needed to describe your application setup.
 # To learn more about the azure.yaml file, visit https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/azd-schema
-
-# Name of the application.
 name: moneta
-
-
-
+services:
+  frontend:
+    language: python
+    project: src/frontend
+    host: containerapp
+    docker:
+      path: ./Dockerfile
+  backend:
+    language: python
+    project: src/backend
+    host: containerapp
+    docker:
+      path: ./Dockerfile
+hooks:
+    preprovision:
+      # windows:
+      #   shell: pwsh
+      #   run: ./scripts/auth_init.ps1
+      #   interactive: true
+      #   continueOnError: false
+      posix:
+        shell: sh
+        run: ./scripts/preprovision.sh
+        interactive: true
+        continueOnError: false
+    postprovision:
+      # windows:
+      #   shell: pwsh
+      #   run: ./scripts/auth_update.ps1;
+      #   interactive: true
+      #   continueOnError: false
+      posix:
+        shell: sh
+        run: ./scripts/postprovision.sh
+        interactive: true
+        continueOnError: false
+    postdeploy:
+      posix:
+        shell: sh
+        run: ./scripts/load_python_env.sh && ./scripts/postdeploy.sh;
+        interactive: true
+        continueOnError: false
+      windows:
+        shell: pwsh
+        run: ./scripts/load_python_env.ps1 && ./scripts/postdeploy.ps1;
+        interactive: true
+        continueOnError: false

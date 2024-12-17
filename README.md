@@ -5,6 +5,11 @@ Moneta is an AI-powered assistant designed to empower insurance and banking advi
 The agentic framework used behind is the:
 [Microsoft GBB AI EMEA - Vanilla Agents](https://github.com/Azure-Samples/genai-vanilla-agents)
 
+## Prerequisites
+
+* Docker
+* uv
+
 ## Features
 
 - Multi-Use Case Support: Switch between insurance and banking use cases
@@ -37,6 +42,9 @@ The agentic framework used behind is the:
 - `News`: RSS online feed search on stock news
 
 ## Project structure
+
+TO BE UPDATED!
+
 - backend
   - agents
     - fsi_banking # agents files
@@ -51,20 +59,62 @@ The agentic framework used behind is the:
 
 
 ### Azure deployment (automated)
-azd up
+
+To configure, follow these steps:
+
+1. Make sure you AZ CLI is logged in in the right tenant. Optionally:
+
+    ```shell
+    az login --tenant your_tenant.onmicrosoft.com
+    ```
+
+1. Create a new azd environment:
+
+    ```shell
+    azd env new
+    ```
+
+    This will create a folder under `.azure/` in your project to store the configuration for this deployment. You may have multiple azd environments if desired.
+
+1. Set the `AZURE_AUTH_TENANT_ID` azd environment variable to the tenant ID you want to use for Entra authentication:
+
+    ```shell
+    azd env set AZURE_AUTH_TENANT_ID $(az account show --query tenantId -o tsv)
+    ```
+
+1. Login to the azd CLI with the Entra tenant ID:
+
+    ```shell
+    azd auth login --tenant-id $(azd env get-value AZURE_AUTH_TENANT_ID)
+    ```
+
+1. Proceed with AZD deployment:
+
+    ```shell
+    azd up
+    ```
 
 ### Data indexing 
-You can index your data located under the data folder by executing first the data_upload.py and then data_index.py.
+You can index your data located under the data folder by executing first the `data_upload.py` and then `data_indexing.py`:
+```bash
+python3 ./scripts/data_upload.py
+python3 ./scripts/data_indexing.py
+```
 Each subfolder of the data folder will be a seperate index. 
 If you are using managed identity make sure to assign the following roles to the AI Search: Cognitive Service OpenAI user, Storage Blob Data Reader.
 Assign the following roles to the user (yourself): Cognitive Service OpenAI user, Storage Blob Data Contributor, Search Service Data Contributor and Search Service Contributor. 
 
 ### Docker deployment (local) - backend
 
-- create a .env file following the backend/.env.sample
-- adjust your docker container names / registries in backend/deploy_backend_acr.sh 
-- chmod u+x backend/deploy_backend_acr.sh 
--./backend/deploy_backend_acr.sh  
+The python project is managed by pyproject.toml and [uv package manager](https://docs.astral.sh/uv/getting-started/installation/).
+Install uv prior executing.
+
+To run locally:
+```shell
+cd src/backend
+uv sync
+./.venv/bin/python app.py
+```
 
 ### Docker deployment (local) - frontend
 
@@ -73,7 +123,6 @@ Assign the following roles to the user (yourself): Cognitive Service OpenAI user
 Mandatory variables (use `DISABLE_LOGIN=True` for local dev and to bypass MSAL auth):
 ```
 DISABLE_LOGIN=<Set to `True` to disable login>
-FUNCTION_APP_URL=<Your Azure Function App URL>
 ```
 
 For enabling auth you need to have an app registration:
@@ -82,15 +131,6 @@ AZ_REG_APP_CLIENT_ID=<Your Azure Registered App Client ID>
 AZ_TENANT_ID=<Your Azure Tenant ID>
 WEB_REDIRECT_URI=<Your Redirect URI>
 ```
-
-- adjust your docker container names / registries in frontend/deploy_frontend_acr.sh 
-- chmod u+x frontend/deploy_frontend_acr.sh 
--./frontend/deploy_frontend_acr.sh 
-
-### Authorizing CosmosDB DB Role to your principal (local deployment)
-- get your MSFT principalId (from entra) 
-- modify the backend/cosmosdb_cli_role.sh with your principalId and cosmosdb account and resource group
-- run the shell script
 
 ### Running the App (local)
 
