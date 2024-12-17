@@ -139,12 +139,8 @@ var _applicationInsightsName = !empty(applicationInsightsName) ? applicationInsi
 
 // Variables for AI Search index names and configurations
 var aiSearchCioIndexName = 'cio-index'
-var aiSearchCioSemanticConfiguration = 'default'
 var aiSearchFundsIndexName = 'funds-index'
-var aiSearchFundsSemanticConfiguration = 'default'
 var aiSearchInsIndexName = 'ins-index'
-var aiSearchInsSemanticConfiguration = 'default'
-// var aiSearchVectorFieldName = 'contentVector'
 
 // Define common tags  
 
@@ -373,7 +369,6 @@ module backendApp 'modules/app/containerapp.bicep' = {
       AI_SEARCH_ENDPOINT: 'https://${searchService.outputs.name}.search.windows.net'
       AI_SEARCH_FUNDS_INDEX_NAME: aiSearchFundsIndexName
       AI_SEARCH_INS_INDEX_NAME: aiSearchInsIndexName
-      AI_SEARCH_INS_SEMANTIC_CONFIGURATION: aiSearchInsSemanticConfiguration
       AZURE_OPENAI_API_VERSION: azureOpenaiApiVersion
       AZURE_OPENAI_DEPLOYMENT_NAME: deployments[1].name
       AZURE_OPENAI_ENDPOINT: openAi.outputs.endpoint
@@ -732,12 +727,10 @@ output AZURE_PRINCIPAL_ID string = azurePrincipalId
 output AZURE_OPENAI_EMBEDDING_DEPLOYMENT string = deployments[0].name
 output AZURE_OPENAI_EMBEDDING_MODEL string = deployments[0].model.name
 
-output AI_SEARCH_CIO_INDEX_NAME string = 'moneta-cio-vector'
-output AI_SEARCH_FUNDS_INDEX_NAME string = 'moneta-funds-vector'
-output AI_SEARCH_FUNDS_SEMANTIC_CONFIGURATION string = 'default'
-
+// Must match the index names created automatically by postdeploy
+output AI_SEARCH_CIO_INDEX_NAME string = aiSearchCioIndexName
+output AI_SEARCH_FUNDS_INDEX_NAME string = aiSearchFundsIndexName
 output AI_SEARCH_INS_INDEX_NAME string = aiSearchInsIndexName
-output AI_SEARCH_INS_SEMANTIC_CONFIGURATION string = aiSearchInsSemanticConfiguration
 
 output AZURE_STORAGE_ACCOUNT_ID string = storage.outputs.resourceId
 output AZURE_STORAGE_ACCOUNT_ENDPOINT string = storage.outputs.primaryBlobEndpoint

@@ -32,13 +32,13 @@ class BankingOrchestrator(SemanticOrchastrator):
             credential=DefaultAzureCredential(),
             service_endpoint=os.getenv('AI_SEARCH_ENDPOINT'),
             index_name=os.getenv('AI_SEARCH_FUNDS_INDEX_NAME'),
-            semantic_configuration_name=os.getenv('AI_SEARCH_FUNDS_SEMANTIC_CONFIGURATION'))
+            semantic_configuration_name="default")
 
         self.cio = CIOFacade(
             credential=DefaultAzureCredential(),
             service_endpoint=os.getenv('AI_SEARCH_ENDPOINT'),
             index_name=os.getenv('AI_SEARCH_CIO_INDEX_NAME'),
-            semantic_configuration_name=os.getenv('AI_SEARCH_CIO_SEMANTIC_CONFIGURATION'))
+            semantic_configuration_name="default")
         
         self.news = NewsFacade()
         
