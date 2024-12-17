@@ -123,7 +123,9 @@ Install uv prior executing.
 
 To run locally:
 
-mind the env.sample file
+mind the sample.env file - by default the application will try to read AZD enviornment configuraiton and falls on .env only when it does not find one.
+
+**OBS!** Activate .venv or run the binary directly.
 
 ```shell
 cd src/backend
@@ -154,12 +156,14 @@ Install uv prior executing.
 
 To run locally:
 
-mind the env.sample file
+mind the sample.env file - by default the application will try to read AZD enviornment configuraiton and falls on .env only when it does not find one.
+
+**OBS!** Activate .venv or run the binary directly.
 
 ```shell
 cd src/frontend
 uv sync
-streamlit run app.py
+./.venv/bin/streamlit run app.py
 ```
 
 Note: the web app is deployed with DISABLE_LOGIN=true configuration bypassing MSAL
