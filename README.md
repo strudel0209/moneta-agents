@@ -12,6 +12,8 @@ You can choose chich Agentic orchestration framework the Solution uses behind th
 
 * Docker
 * [uv](https://docs.astral.sh/uv/getting-started/installation/)
+* python 3.12
+* pip
 
 ## Features
 
@@ -132,6 +134,8 @@ In case you need to reload the data, you can do it by running:
 ```shell
 azd hooks run postdeploy
 ```
+
+**OBS!** If you deploy from WSL mounted path, the postdeploy data init might fail. Please consider rerunning from WSL native path location.
 
 ### Running the App locally - BACKEND
 
