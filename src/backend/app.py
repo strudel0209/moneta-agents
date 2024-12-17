@@ -12,7 +12,12 @@ from gbb.handler import VanillaAgenticHandler
 from sk.handler import SemanticKernelHandler  
   
 from dotenv import load_dotenv
-logging.basicConfig(level=logging.INFO)  
+logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 def load_azd_env():
     """Get path to current azd env file and load file using python-dotenv"""

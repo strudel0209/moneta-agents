@@ -9,7 +9,7 @@ You can choose chich Agentic orchestration framework the Solution uses behind th
 ## Prerequisites
 
 * Docker
-* uv
+* [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 ## Features
 
@@ -62,8 +62,15 @@ Note: GBB Vanilla agents are similar but differs a bit (no responder agent)
       - skills
     - app.py # esposes API
 
-- frontend
-  - app.py # streamlit app
+  - frontend
+    - app.py # streamlit app
+
+  - data
+    - ai-search-index
+      - cio-index
+      - funds-index
+      - ins-index
+    - customer-profile
 
 - infra
   - bicep file
@@ -108,14 +115,23 @@ To configure, follow these steps:
 
 ### Data indexing 
 
-You can index your data located under the data folder by executing:
+Demo data is loaded with the `azd up` process automatically.
+
+Indexes are sourced from 'src/data/ai-search-index' folder.
+Each subfolder of the data folder will be a seperate index. 
+
+Customer profiles are sourced from 'src/data/customer-profiles'.
+Each subfolder of the data folder will be get a seperate index. 
+
+AZD deploy process will run `setup_aisearch.py` and `setup_cosmosdb.py`. 
+DO NOT run those commands by hand unless you are confident you understand how the environment needs to be setup. 
+
+In case you need to reload the data, you can do it by running:
 ```shell
 azd hooks run postdeploy
 ```
 
-Each subfolder of the data folder will be get a seperate index. It will run `setup_aisearch.py` and `setup_cosmosdb.py`. DO NOT run those commands by hand unless you are confident you understand how the environment needs to be setup. 
-
-### Docker deployment (local) - backend
+### Running the App locally - BACKEND
 
 The python project is managed by pyproject.toml and [uv package manager](https://docs.astral.sh/uv/getting-started/installation/).
 Install uv prior executing.
@@ -132,23 +148,7 @@ uv sync
 ./.venv/bin/python app.py
 ```
 
-### Docker deployment (local) - frontend
-
-- create a .env file following the env.sample in the project frontend directory and set the following environment variables: 
-
-Mandatory variables (use `DISABLE_LOGIN=True` for local dev and to bypass MSAL auth):
-```
-DISABLE_LOGIN=<Set to `True` to disable login>
-```
-
-For enabling auth you need to have an app registration:
-```
-AZ_REG_APP_CLIENT_ID=<Your Azure Registered App Client ID>
-AZ_TENANT_ID=<Your Azure Tenant ID>
-WEB_REDIRECT_URI=<Your Redirect URI>
-```
-
-### Running the App (local)
+### Running the App locally - FRONTEND
 
 The python project is managed by pyproject.toml and [uv package manager](https://docs.astral.sh/uv/getting-started/installation/).
 Install uv prior executing.
