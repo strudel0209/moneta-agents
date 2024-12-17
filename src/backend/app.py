@@ -12,12 +12,19 @@ from gbb.handler import VanillaAgenticHandler
 from sk.handler import SemanticKernelHandler  
   
 from dotenv import load_dotenv
-logging.basicConfig(level=logging.INFO)
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter(
+    '%(asctime)s.%(msecs)03d - %(levelname)s - %(name)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
+handler.setFormatter(formatter)
+
+# Clear existing handlers and set the new one
+root_logger.handlers.clear()
+root_logger.addHandler(handler)
 
 def load_azd_env():
     """Get path to current azd env file and load file using python-dotenv"""
@@ -147,4 +154,4 @@ async def http_trigger(request_body: dict = Body(...)):
     
 if __name__ == "__main__":  
     import uvicorn  
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)  
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True, log_config=None)  
