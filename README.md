@@ -107,14 +107,13 @@ To configure, follow these steps:
     ```
 
 ### Data indexing 
-You can index your data located under the data folder by executing first the `data_upload.py` and then `data_indexing.py`:
-```bash
-python3 ./scripts/data_upload.py
-python3 ./scripts/data_indexing.py
+
+You can index your data located under the data folder by executing:
+```shell
+azd hooks run postdeploy
 ```
-Each subfolder of the data folder will be a seperate index. 
-If you are using managed identity make sure to assign the following roles to the AI Search: Cognitive Service OpenAI user, Storage Blob Data Reader.
-Assign the following roles to the user (yourself): Cognitive Service OpenAI user, Storage Blob Data Contributor, Search Service Data Contributor and Search Service Contributor. 
+
+Each subfolder of the data folder will be get a seperate index. It will run `setup_aisearch.py` and `setup_cosmosdb.py`. DO NOT run those commands by hand unless you are confident you understand how the environment needs to be setup. 
 
 ### Docker deployment (local) - backend
 
