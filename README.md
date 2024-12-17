@@ -62,7 +62,7 @@ Note: GBB Vanilla agents are similar but differs a bit (no responder agent)
         - insurance # agents files
       - orchestrators
       - skills
-    - app.py # esposes API
+    - app.py # exposes API
 
   - frontend
     - app.py # streamlit app
