@@ -110,10 +110,7 @@ async def http_trigger(request_body: dict = Body(...)):
     else:  
         raise HTTPException(status_code=400, detail="Invalid HANDLER_TYPE")  
   
-    # Handle the request using the appropriate handler  
-    logging.warning(f"---------------------------------")
-    logging.warning(f"Handling request with {handler_type} handler...")
-    logging.warning(f"load_history: {load_history}")
+    logging.info(f"Handling request with {handler_type} handler...")
     
     try:  
         result = await handler.handle_request(
