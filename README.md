@@ -117,14 +117,14 @@ Each subfolder of the data folder will be get a seperate index. It will run `set
 
 ### Docker deployment (local) - backend
 
-The python project is managed by pyproject.toml and [uv package manager](https://docs.astral.sh/uv/getting-started/installation/).
+The python project is managed by `pyproject.toml` and the [uv package manager](https://docs.astral.sh/uv/getting-started/installation/).
 Install uv prior executing.
 
 To run locally:
 
-mind the sample.env file - by default the application will try to read AZD enviornment configuraiton and falls on .env only when it does not find one.
+Mind the `sample.env` file - by default the application will try to read AZD environment variables and falls back on `.env` only when it does not find one.
 
-**OBS!** Activate .venv or run the binary directly.
+Activate the `.venv` virtual environment or run the binary directly:
 
 ```shell
 cd src/backend
