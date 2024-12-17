@@ -2,7 +2,8 @@
 
 Moneta is an AI-powered assistant designed to empower insurance and banking advisors. This Solution Accelerator provides a chat interface where advisors can interact with various AI agents specialized in different domains such as insurance policies, CRM, product information, funds, CIO insights, and news.
 
-The agentic framework used behind is the:
+You can choose chich Agentic orchestration framework the Solution uses behind the scene by setting the approriate env variable. Choose from:
+[Semantic Kernel](https://learn.microsoft.com/en-us/semantic-kernel/overview/)
 [Microsoft GBB AI EMEA - Vanilla Agents](https://github.com/Azure-Samples/genai-vanilla-agents)
 
 ## Prerequisites
@@ -12,50 +13,61 @@ The agentic framework used behind is the:
 
 ## Features
 
+- Agentic framework selection Support: Switch between Semantic Kernel and experimental MSFT GBB Vanilla Agents
 - Multi-Use Case Support: Switch between insurance and banking use cases
 - Agent Collaboration: Agents collaborate to provide the best answers
 - Azure AD Authentication: Secure login with Microsoft Azure Active Directory
 - Conversation History: Access and continue previous conversations
 
 ## Implementation Details
-- Python 3.11 or higher
+- Python 3.12 or higher
 - Streamlit (frontend app - chatGPT style)
 - Microsoft Authentication Library (MSAL - if using authentication - optional)
 - Azure AD application registration (if using authentication - optional)
-- An Azure Function App as backend API endpoint
+- An Azure Container App hosting backend API endpoint
 - CosmosDB to store user conversations and history
 
 ## Use Cases
 
-### Insurance
+### Insurance (SK)
 
-- `Planner`: an orchestrator agent
 - `CRM`: simulate fetching clients information from a CRM (DB, third-party API etc)
 - `Policies RAG`: vector search with AI Search on various public available policy documents (product information)
+- `Responder`: collects previous agents replies and respond to the user
 
-### Banking
+### Banking (SK)
 
-- `Planner`: an orchestrator agent
 - `CRM`: simulate fetching clients information from a CRM (DB, third-party API etc)
 - `Funds and ETF RAG`: vector search with AI Search on few funds and ETF factsheets (product information)
 - `CIO`: vector search with AI Search on in-house investments view and recommendations
 - `News`: RSS online feed search on stock news
+- `Responder`: collects previous agents replies and respond to the user
+
+Note: GBB Vanilla agents are similar but differs a bit (no responder agent)
 
 ## Project structure
 
-TO BE UPDATED!
-
-- backend
-  - agents
-    - fsi_banking # agents files
-    - fsi_insurance # agents files
-  - function_app.py
+- src
+  - backend
+    - gbb
+      - agents
+        - fsi_banking # agents files
+        - fsi_insurance # agents files
+      - genai_vanilla_agents # the framework source
+    - sk
+      - agents
+        - banking # agents files
+        - insurance # agents files
+      - orchestrators
+      - skills
+    - app.py # esposes API
 
 - frontend
-  - rm_app.py # streamlit app
+  - app.py # streamlit app
 
 - infra
   - bicep file
+  - infra modules
 
 
 ### Azure deployment (automated)
@@ -110,6 +122,9 @@ The python project is managed by pyproject.toml and [uv package manager](https:/
 Install uv prior executing.
 
 To run locally:
+
+mind the env.sample file
+
 ```shell
 cd src/backend
 uv sync
@@ -134,19 +149,20 @@ WEB_REDIRECT_URI=<Your Redirect URI>
 
 ### Running the App (local)
 
-Start the Streamlit application:
+The python project is managed by pyproject.toml and [uv package manager](https://docs.astral.sh/uv/getting-started/installation/).
+Install uv prior executing.
 
-```bash
-cd frontend
-streamlit run rm_app.py
+To run locally:
+
+mind the env.sample file
+
+```shell
+cd src/frontend
+uv sync
+streamlit run app.py
 ```
 
-### Running the Backend Function App (local)
-
-```bash
-cd backend
-func host start
-```
+Note: the web app is deployed with DISABLE_LOGIN=true configuration bypassing MSAL
 
 ### Usage
 
