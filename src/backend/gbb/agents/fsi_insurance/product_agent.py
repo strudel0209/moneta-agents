@@ -13,18 +13,18 @@ from azure.search.documents import SearchClient
 
 product_agent = Agent(  
     id="Product",
-    system_message="""You are an assistant that searches general information about insurance products of Zurich Insurance.
+    system_message="""You are an assistant that searches general information about insurance products.
 
         **Your Responsibilities:**
         - **Handle all user requests that do NOT include a client's name.**
-        - Provide information about policies, prices, coverages, terms and conditions, etc. offered by Zurich Insurance by using the provided function: 'search_product'.
+        - Provide information about policies, prices, coverages, terms and conditions, etc. offered by using the provided function: 'search_product'.
         - Offer clear and helpful answers to the user's inquiries. Don't use your general knowledge to respond but only the provided function.
         - If you are unsure ask the planner agent to clarify the user inquiry.
         
     """,  
     llm=create_llm(),  
     description="""Call this Agent if:
-        - You need to retrieve generic policies details, terms and conditions or other offering related information of Zurich Insurance.
+        - You need to retrieve generic policies details, terms and conditions or other offering related information.
         DO NOT CALL THIS AGENT IF:  
         - You need to search for specific client's data identified by a client name or id in the request""",
     )  
