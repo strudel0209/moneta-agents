@@ -116,6 +116,12 @@ To configure, follow these steps:
     ```shell
     azd up
     ```
+### Deployment Scripts explaination (files in `scripts/`)
+This project includes preprovision, postprovision, and postdeploy scripts for both Bash and PowerShell environments that works with the Azure Developer CLI (azd) on Windows, macOS, and Linux:
+- **preprovision** scripts set up Azure resources (App Registrations, environment variables).
+- **postprovision** scripts configure additional settings (redirect URIs, secrets).
+- **postdeploy** scripts handle data loading (AI Search, Cosmos DB).
+- **predown** scripts deletes an Azure app registration using the provided Azure App Registration ID before executing the resource purge.
 
 ### Data indexing 
 
@@ -136,6 +142,7 @@ azd hooks run postdeploy
 ```
 
 **OBS!** If you deploy from WSL mounted path, the postdeploy data init might fail. Please consider rerunning from WSL native path location.
+
 
 ### Running the App locally - BACKEND
 
