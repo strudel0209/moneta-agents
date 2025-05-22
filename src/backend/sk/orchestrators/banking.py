@@ -18,6 +18,7 @@ from sk.orchestrators.semantic_orchestrator import SemanticOrchastrator
 from semantic_kernel.connectors.ai.azure_ai_inference import AzureAIInferenceChatCompletion
 import azure.ai.inference.aio as aio_inference
 import azure.identity.aio as aio_identity
+from foundry_agent_utils import FoundryAgentUtils
 
 class BankingOrchestrator(SemanticOrchastrator):
     def __init__(self):
@@ -25,36 +26,26 @@ class BankingOrchestrator(SemanticOrchastrator):
         self.logger = logging.getLogger(__name__)
         self.logger.debug("Banking Orchestrator init")
         
-        # Initialize required services and kernel
-        self.crm = CRMFacade(
-            key=DefaultAzureCredential(),
-            cosmosdb_endpoint=os.getenv("COSMOSDB_ENDPOINT"),
-            crm_database_name=os.getenv("COSMOSDB_DATABASE_NAME"),
-            crm_container_name=os.getenv("COSMOSDB_CONTAINER_CLIENT_NAME"))
+        crm = CRMFacade(
+                key=DefaultAzureCredential(),
+                cosmosdb_endpoint=os.getenv("COSMOSDB_ENDPOINT"),
+                crm_database_name=os.getenv("COSMOSDB_DATABASE_NAME"),
+                crm_container_name=os.getenv("COSMOSDB_CONTAINER_CLIENT_NAME"))
 
-        self.product = FundsFacade(
+        product = FundsFacade(
             credential=DefaultAzureCredential(),
             service_endpoint=os.getenv('AI_SEARCH_ENDPOINT'),
             index_name=os.getenv('AI_SEARCH_FUNDS_INDEX_NAME'),
             semantic_configuration_name="default")
 
-        self.cio = CIOFacade(
-            credential=DefaultAzureCredential(),
-            service_endpoint=os.getenv('AI_SEARCH_ENDPOINT'),
-            index_name=os.getenv('AI_SEARCH_CIO_INDEX_NAME'),
-            semantic_configuration_name="default")
-        
-        self.news = NewsFacade()
-        
         self.kernel = Kernel(
             services=[self.gpt4o_service],
             plugins=[
-                KernelPlugin.from_object(plugin_instance=self.crm, plugin_name="crm"),
-                KernelPlugin.from_object(plugin_instance=self.product, plugin_name="funds"),
-                KernelPlugin.from_object(plugin_instance=self.cio, plugin_name="cio"),
-                KernelPlugin.from_object(plugin_instance=self.news, plugin_name="news"),
+                KernelPlugin.from_object(plugin_instance=crm, plugin_name="crm"),
+                KernelPlugin.from_object(plugin_instance=product, plugin_name="product"),
             ]
         )
+        self.foundry_utils = FoundryAgentUtils()
 
     # --------------------------------------------
     # Selection Strategy
@@ -122,34 +113,54 @@ class BankingOrchestrator(SemanticOrchastrator):
     # Create Agent Group Chat
     # --------------------------------------------
     def create_agent_group_chat(self):
-        self.logger.debug("Creating chat")
+        """
+        Create an agent group chat using agents loaded from Azure AI Foundry.
+        Agents are retrieved or created in Foundry using FoundryAgentUtils.ensure_agent.
+        If the agent does not exist in Foundry, it is created from the fallback YAML definition in sk/agents/banking/.
+        The group chat is orchestrated using Semantic Kernel's AgentGroupChat.
+        """
+        self.logger.debug("Creating banking chat (Foundry)")
 
-        crm_agent = self.create_agent(service_id="gpt-4o",
-                                      kernel=self.kernel,
-                                      definition_file_path="sk/agents/banking/crm.yaml")
-        funds_agent = self.create_agent(service_id="gpt-4o",
-                                      kernel=self.kernel,
-                                      definition_file_path="sk/agents/banking/funds.yaml")
-        cio_agent = self.create_agent(service_id="gpt-4o",
-                                      kernel=self.kernel,
-                                      definition_file_path="sk/agents/banking/cio.yaml")
-        news_agent = self.create_agent(service_id="gpt-4o",
-                                      kernel=self.kernel,
-                                      definition_file_path="sk/agents/banking/news.yaml")
-        responder_agent = self.create_agent(service_id="gpt-4o",
-                                      kernel=self.kernel,
-                                      definition_file_path="sk/agents/banking/responder.yaml")
+        # Agents are loaded from Foundry, falling back to YAML if not present in Foundry
+        crm_agent = self.foundry_utils.ensure_agent(
+            agent_name="CRMAgent",
+            kernel=self.kernel,
+            foundry_project_name=os.getenv("AI_PROJECT_CONNECTION_STRING"),
+            fallback_yaml_path="sk/agents/banking/crm.yaml"
+        )
+        funds_agent = self.foundry_utils.ensure_agent(
+            agent_name="FundsAgent",
+            kernel=self.kernel,
+            foundry_project_name=os.getenv("AI_PROJECT_CONNECTION_STRING"),
+            fallback_yaml_path="sk/agents/banking/funds.yaml"
+        )
+        cio_agent = self.foundry_utils.ensure_agent(
+            agent_name="CIOAgent",
+            kernel=self.kernel,
+            foundry_project_name=os.getenv("AI_PROJECT_CONNECTION_STRING"),
+            fallback_yaml_path="sk/agents/banking/cio.yaml"
+        )
+        news_agent = self.foundry_utils.ensure_agent(
+            agent_name="NewsAgent",
+            kernel=self.kernel,
+            foundry_project_name=os.getenv("AI_PROJECT_CONNECTION_STRING"),
+            fallback_yaml_path="sk/agents/banking/news.yaml"
+        )
+        responder_agent = self.foundry_utils.ensure_agent(
+            agent_name="SummariserAgent",
+            kernel=self.kernel,
+            foundry_project_name=os.getenv("AI_PROJECT_CONNECTION_STRING"),
+            fallback_yaml_path="sk/agents/banking/responder.yaml"
+        )
 
         agents = [crm_agent, funds_agent, cio_agent, news_agent, responder_agent]
 
         agent_group_chat = AgentGroupChat(
-            agents=agents,
-            selection_strategy=self.create_selection_strategy(agents, responder_agent),
-            termination_strategy=self.create_termination_strategy(
-                agents=[funds_agent, crm_agent, responder_agent],
-                final_agent=responder_agent,
-                maximum_iterations=8
-            )
-        )
+                agents=agents,
+                selection_strategy=self.create_selection_strategy(agents, responder_agent),
+                termination_strategy = self.create_termination_strategy(
+                                         agents=agents,
+                                         final_agent=responder_agent,
+                                         maximum_iterations=8))
 
         return agent_group_chat

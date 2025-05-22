@@ -75,10 +75,17 @@ class SemanticOrchastrator:
         return reply
     
      # --------------------------------------------
-    # UTILITY - CREATES an agent based on YAML definition
+    # DEPRECATED: Agent creation from YAML
     # --------------------------------------------
     def create_agent(self, kernel, service_id, definition_file_path):
-
+        """
+        [DEPRECATED]
+        This method is retained for reference only. Agent instantiation should now be performed using FoundryAgentUtils.ensure_agent,
+        which retrieves or creates agents in Azure AI Foundry and falls back to YAML only if needed.
+        
+        To instantiate agents, use FoundryAgentUtils in your orchestrator:
+            agent = self.foundry_utils.ensure_agent(...)
+        """
         with open(definition_file_path, 'r', encoding='utf-8') as file:
             definition = yaml.safe_load(file)
             
@@ -115,4 +122,3 @@ class SemanticOrchastrator:
             description=definition['description'],
             instructions=definition['instructions']
         )
- 

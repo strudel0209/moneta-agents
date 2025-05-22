@@ -14,7 +14,9 @@ from sk.handler import SemanticKernelHandler
   
 import util
 
-util.load_dotenv_from_azd()
+#util.load_dotenv_from_azd()
+from dotenv import load_dotenv
+load_dotenv()
 
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.INFO)
@@ -37,7 +39,10 @@ app = FastAPI()
 @app.post("/http_trigger")
 async def http_trigger(request_body: dict = Body(...)):
     logging.info('Empowering RMs - HTTP trigger function processed a request.')
-        
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}       
 
     # Extract parameters from the request body  
     user_id = request_body.get('user_id')

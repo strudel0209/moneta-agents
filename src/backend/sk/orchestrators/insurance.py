@@ -12,6 +12,7 @@ from semantic_kernel.functions import KernelPlugin, KernelFunctionFromPrompt
 from sk.skills.crm_facade import CRMFacade
 from sk.skills.policies_facade import PoliciesFacade
 from sk.orchestrators.semantic_orchestrator import SemanticOrchastrator
+from foundry_agent_utils import FoundryAgentUtils
 
 class InsuranceOrchestrator(SemanticOrchastrator):
     def __init__(self):
@@ -38,6 +39,7 @@ class InsuranceOrchestrator(SemanticOrchastrator):
                 KernelPlugin.from_object(plugin_instance=product, plugin_name="product"),
             ]
         )
+        self.foundry_utils = FoundryAgentUtils()
 
     # --------------------------------------------
     # Selection Strategy
@@ -105,23 +107,35 @@ class InsuranceOrchestrator(SemanticOrchastrator):
     # Create Agent Group Chat
     # --------------------------------------------
     def create_agent_group_chat(self):
+        """
+        Create an agent group chat using agents loaded from Azure AI Foundry.
+        Agents are retrieved or created in Foundry using FoundryAgentUtils.ensure_agent.
+        If the agent does not exist in Foundry, it is created from the fallback YAML definition in sk/agents/insurance/.
+        The group chat is orchestrated using Semantic Kernel's AgentGroupChat.
+        """
+        self.logger.debug("Creating insurance chat (Foundry)")
 
-        self.logger.debug("Creating insurance chat")
+        # Agents are loaded from Foundry, falling back to YAML if not present in Foundry
+        query_agent = self.foundry_utils.ensure_agent(
+            agent_name="QueryAgent",
+            kernel=self.kernel,
+            foundry_project_name=os.getenv("AI_PROJECT_CONNECTION_STRING"),
+            fallback_yaml_path="sk/agents/insurance/query.yaml"
+        )
+        responder_agent = self.foundry_utils.ensure_agent(
+            agent_name="SummariserAgent",
+            kernel=self.kernel,
+            foundry_project_name=os.getenv("AI_PROJECT_CONNECTION_STRING"),
+            fallback_yaml_path="sk/agents/insurance/responder.yaml"
+        )
 
-        query_agent = self.create_agent(service_id="gpt-4o",
-                                        kernel=self.kernel,
-                                        definition_file_path="sk/agents/insurance/query.yaml")
-        responder_agent = self.create_agent(service_id="gpt-4o",
-                                            kernel=self.kernel,
-                                            definition_file_path="sk/agents/insurance/responder.yaml")
-
-        agents=[query_agent, responder_agent]
+        agents = [query_agent, responder_agent]
 
         agent_group_chat = AgentGroupChat(
                 agents=agents,
                 selection_strategy=self.create_selection_strategy(agents, responder_agent),
                 termination_strategy = self.create_termination_strategy(
-                                         agents=[responder_agent,query_agent],
+                                         agents=agents,
                                          final_agent=responder_agent,
                                          maximum_iterations=8))
 

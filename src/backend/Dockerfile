@@ -16,7 +16,8 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 ENV UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
-    UV_PROJECT_ENVIRONMENT=/app/.venv
+    UV_PROJECT_ENVIRONMENT=/app/.venv \
+    PYTHONPATH="/app/src"
     # UV_PYTHON_DOWNLOADS=never \
     # UV_PYTHON=python3.12 \
 
